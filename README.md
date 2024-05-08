@@ -1,1 +1,1 @@
-# data-statistical-analysis-app
+# data statistical nalysis app
