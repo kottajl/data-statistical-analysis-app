@@ -1,8 +1,11 @@
 import * as React from "react";
-import { ReactGrid, Column, Row, CellChange, TextCell, DefaultCellTypes, Id } from "@silevis/reactgrid";
+import { ReactGrid, Column, Row, CellChange, TextCell, DefaultCellTypes, Id, MenuOption, CellLocation, SelectionMode } from "@silevis/reactgrid";
 import { ToastContainer, toast } from 'react-toastify';
+import { Menu, MenuItem, MenuButton } from '@szhsin/react-menu';
+import '@szhsin/react-menu/dist/index.css';
 import "@silevis/reactgrid/styles.css";
 import 'react-toastify/dist/ReactToastify.css';
+import 'bulma/css/bulma.min.css';
 
 enum VariableType {
   CATEGORICAL = "C",
@@ -115,11 +118,10 @@ function App() {
   const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
     var colNames: string[] = columnIds.map((col) => (col as string))
 
-    const _variables = reorderArray(variables, 
+    updateSpreadsheet(reorderArray(variables, 
       getIndicesMatchingCondition(variables, (_var) => colNames.includes(getColNameFromVarName(_var.name))),
       getIndicesMatchingCondition(variables, (_var) => getColNameFromVarName(_var.name) === (targetColumnId as string))[0]
-    )
-    updateSpreadsheet(_variables);
+    ));
   }
 
   const handleColumnResize = (ci: Id, width: number) => {
@@ -130,6 +132,54 @@ function App() {
         prevColumns[columnIndex] = updatedColumn;
         return [...prevColumns];
     });
+  }
+
+  const handleContextMenu = (
+    selectedRowIds: Id[],
+    selectedColIds: Id[],
+    selectionMode: SelectionMode,
+    _: MenuOption[],
+    selectedRanges: CellLocation[][]
+  ): MenuOption[] => {
+    const menuOptions: MenuOption[] = []
+    if (selectionMode === "column")
+    {
+      if (selectedColIds.includes("i"))
+        return menuOptions;
+
+      menuOptions.push({
+        id: "removeVariable",
+        label: "Remove",
+        handler: () => {
+          updateSpreadsheet(variables.filter((v) => !selectedColIds.includes(getColNameFromVarName(v.name))))
+        }
+      });
+
+      menuOptions.push({
+        id: "fillMissingValues",
+        label: "Fill missing values",
+        handler: () => {
+          
+        }
+      });
+
+      menuOptions.push({
+        id: "removeOutliers",
+        label: "Remove outlier values",
+        handler: () => {
+          
+        }
+      });
+
+      menuOptions.push({
+        id: "changeType",
+        label: "Change type",
+        handler: () => {
+          
+        }
+      });
+    }
+    return menuOptions;
   }
 
   const handleChanges = (changes: CellChange[]) => { 
@@ -157,16 +207,23 @@ function App() {
     }); 
   }; 
 
-  return <div>
-  <ReactGrid 
-    rows={rows} 
-    columns={columns} 
-    onColumnResized={handleColumnResize} 
-    onColumnsReordered={handleColumnsReorder} 
-    onCellsChanged={handleChanges}
-    enableColumnSelection 
-    stickyTopRows={1} 
-    stickyLeftColumns={1}/>
+  return <div style={{paddingRight: 10, paddingLeft: 10, paddingTop:5}}>
+    <div className="box" style={{padding: 3, marginBottom: 5}}>
+      <Menu menuButton={<MenuButton className="button is-light is-normal">File</MenuButton>} menuClassName="fileMenu">
+        <MenuItem>Import</MenuItem>
+        <MenuItem>Export</MenuItem>
+      </Menu>
+    </div>
+    <ReactGrid 
+      rows={rows} 
+      columns={columns} 
+      onColumnResized={handleColumnResize} 
+      onColumnsReordered={handleColumnsReorder} 
+      onCellsChanged={handleChanges}
+      onContextMenu={handleContextMenu}
+      enableColumnSelection 
+      stickyTopRows={1} 
+      stickyLeftColumns={1}/>
     <ToastContainer />
   </div>
     
