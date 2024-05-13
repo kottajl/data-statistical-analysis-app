@@ -1,25 +1,31 @@
 import * as React from "react";
-import { render } from "react-dom";
 import { ReactGrid, Column, Row, CellChange, TextCell, DefaultCellTypes, Id } from "@silevis/reactgrid";
+import { ToastContainer, toast } from 'react-toastify';
 import "@silevis/reactgrid/styles.css";
+import 'react-toastify/dist/ReactToastify.css';
 
-interface Variable {
+enum VariableType {
+  CATEGORICAL = "C",
+  NUMERICAL = "N"
+}
+
+class Variable {
   name: string;
+  type: VariableType;
+  values: (string | undefined)[] | (number | undefined)[];
+
+  constructor(name: string, type: VariableType, values: (string | undefined)[] | (number | undefined)[]) {
+    this.name = name;
+    this.type = type;
+    this.values = values;
+  }
 }
 
-interface NumberVariable extends Variable {
-  values: (number | undefined)[];
-}
-
-interface CategoryVariable extends Variable {
-  values: (string | undefined)[];
-}
-
-const getVariables = (): (NumberVariable | CategoryVariable)[] => [
-  {name: "var1", values: ["a","b",undefined,"d","e",undefined,"g","h"]},
-  {name: "var2", values: [0,1,2,3,undefined,4,5,6,7]},
-  {name: "var3", values: ["a","d","5","d","e",undefined,"g","h"]},
-  {name: "var4", values: [0,1,2,3,undefined,4,5,6,7,5,5,6,7,8,9,9,9,9]}
+const getVariables = (): Variable[] => [
+  {name: "var1", type: VariableType.CATEGORICAL, values: ["a","b",undefined,"d","e",undefined,"g","h"]},
+  {name: "var2", type: VariableType.NUMERICAL, values: [0,1,2,3,undefined,4,5,6,7]},
+  {name: "var3", type: VariableType.CATEGORICAL, values: ["a","d","5","d","e",undefined,"g","h"]},
+  {name: "var4", type: VariableType.NUMERICAL, values: [0,1,2,3,undefined,4,5,6,7,5,5,6,7,8,9,9,9,9]}
 ];
 
 function getColNameFromVarName(_var: string): string 
@@ -42,13 +48,13 @@ const getColumns = (variables: Variable[]): Column[] => [
   }))
 ];
 
-const getRows = (variables: (NumberVariable | CategoryVariable)[], num_values: number): Row[] => [
+const getRows = (variables: Variable[], num_values: number): Row[] => [
   {
     rowId: "header",
     cells: [
       { type: "header", text: ""},
       ...variables.map<DefaultCellTypes>(
-        (variable) => ({ type: "header", text: variable.name})
+        (variable) => ({ type: "header", text: variable.name + " (" + variable.type + ")"})
       )
     ]
   },
@@ -80,21 +86,40 @@ function getIndicesMatchingCondition<T>(array: T[], condition: (element: T) => b
   return array2;
 }
 
+function showWarning(text: string)
+{
+  toast.warn(text, {
+    position: "top-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    progress: undefined,
+    theme: "light",
+    });
+}
+
 function App() {
   var variableValuesLength = 20
-  var [variables, setVariables] = React.useState<(NumberVariable | CategoryVariable)[]>(getVariables());
-  const [columns, setColumns] = React.useState<Column[]>(getColumns(variables));
-  const [rows, setRows] = React.useState<Row[]>(getRows(variables, variableValuesLength));
+  var [variables, setVariables] = React.useState<Variable[]>(getVariables());
+  var [columns, setColumns] = React.useState<Column[]>(getColumns(variables));
+  var [rows, setRows] = React.useState<Row[]>(getRows(variables, variableValuesLength));
 
+  const updateSpreadsheet = (_variables: Variable[]) =>
+  {
+    setVariables(_variables);
+    setColumns(getColumns(_variables));
+    setRows(getRows(_variables, variableValuesLength))
+  }
+  
   const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
     var colNames: string[] = columnIds.map((col) => (col as string))
 
-    variables = reorderArray(variables, 
+    const _variables = reorderArray(variables, 
       getIndicesMatchingCondition(variables, (_var) => colNames.includes(getColNameFromVarName(_var.name))),
       getIndicesMatchingCondition(variables, (_var) => getColNameFromVarName(_var.name) === (targetColumnId as string))[0]
-    );
-    setColumns(getColumns(variables));
-    setRows(getRows(variables, variableValuesLength))
+    )
+    updateSpreadsheet(_variables);
   }
 
   const handleColumnResize = (ci: Id, width: number) => {
@@ -107,15 +132,44 @@ function App() {
     });
   }
 
-  return <ReactGrid 
+  const handleChanges = (changes: CellChange[]) => { 
+    setVariables((prevVariables) => {
+      changes.forEach((change) => {
+        change = change as CellChange<TextCell>
+        const _variables = variables
+        const _var = _variables.filter((v) => getColNameFromVarName(v.name) === change.columnId)[0]
+        if (_var.type === VariableType.NUMERICAL) {
+          const new_val = +change.newCell.text as number
+          if (!isNaN(new_val))
+            _var.values[change.rowId as number] = new_val
+          else
+            showWarning("Value is not a number!")
+        }
+        else if (_var.type === VariableType.CATEGORICAL) {
+          _var.values[change.rowId as number] = change.newCell.text
+        }
+        updateSpreadsheet(_variables)
+        //change.rowId;
+        //change.columnId;
+        //change.newCell.text;
+      });
+      return [...prevVariables];
+    }); 
+  }; 
+
+  return <div>
+  <ReactGrid 
     rows={rows} 
     columns={columns} 
     onColumnResized={handleColumnResize} 
     onColumnsReordered={handleColumnsReorder} 
+    onCellsChanged={handleChanges}
     enableColumnSelection 
     stickyTopRows={1} 
-    stickyLeftColumns={1}/>;
+    stickyLeftColumns={1}/>
+    <ToastContainer />
+  </div>
+    
+  ;
   }; 
 export default App;
-
-render(<App />, document.getElementById("root"));
