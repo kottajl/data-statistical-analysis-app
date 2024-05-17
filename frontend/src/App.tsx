@@ -119,6 +119,8 @@ function App() {
   
   const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
     var colNames: string[] = columnIds.map((col) => (col as string))
+    if (targetColumnId === "i")
+      return;
 
     updateSpreadsheet(reorderArray(variables, 
       getIndicesMatchingCondition(variables, (_var) => colNames.includes(getColNameFromVarName(_var.name))),
