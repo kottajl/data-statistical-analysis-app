@@ -1,12 +1,13 @@
 import os
 
+import numpy as np
 from django.http import FileResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from backend.settings import FILES_URL
 import uuid
-from data_manager.functions import get_file_url
+from data_manager.functions import get_file_url, calculate_stats
 
 
 @api_view(["POST"])
@@ -39,3 +40,14 @@ def data_export(request):
             return FileResponse(open(get_file_url(request.data["destination"]), 'rb'), content_type="text/csv",
                                 as_attachment=True)
         return Response(data=dict(detail="File does not exist"), status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+def stats_1d(request):
+    # parameters = dict()
+    functions = request.GET.getlist("functions[]")
+    string_data = request.GET.getlist("data[]")
+    data = np.array(string_data, dtype=float)
+    results = dict()
+    for function in functions:
+        results[function] = calculate_stats(function, data)
+    return Response(data=results, status=status.HTTP_200_OK)
