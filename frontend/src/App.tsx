@@ -38,8 +38,14 @@ function getColNameFromVarName(_var: string): string
 
 const getColumns = (variables: Variable[]): Column[] => [
   {
-    columnId: "i",
+    columnId: "id",
     width:50,
+    resizable: true,
+    reorderable: false
+  },
+  {
+    columnId: "timestamp",
+    width:150,
     resizable: true,
     reorderable: false
   },
@@ -48,26 +54,36 @@ const getColumns = (variables: Variable[]): Column[] => [
     width: getColNameFromVarName(variable.name).length * 10, 
     resizable: true,
     reorderable: true
-  }))
+  })),
+  {
+    columnId: "case_id",
+    width:75,
+    resizable: true,
+    reorderable: false
+  },
 ];
 
-const getRows = (variables: Variable[], numValues: number): Row[] => [
+const getRows = (variables: Variable[], numValues: number, timestamps: string[], caseIds: string[]): Row[] => [
   {
     rowId: "header",
     cells: [
       { type: "header", text: "ID"},
+      { type: "header", text: "Time stamp"},
       ...variables.map<DefaultCellTypes>(
         (variable) => ({ type: "header", text: variable.name + " (" + variable.type + ")"})
-      )
+      ),
+      { type: "header", text: "Case ID"}
     ]
   },
   ...Array.from(Array(numValues).keys()).map<Row>((idx) => ({
     rowId: idx,
     cells: [
       { type: "header", text: String(idx+1)},
+      { type: "header", text: timestamps[idx]},
       ...variables.map<DefaultCellTypes>(
         (variable) => ({ type: "text", text: variable.values[idx] === undefined ? "" : String(variable.values[idx])})
-      )
+      ),
+      { type: "header", text: caseIds[idx]},
     ]
   }))
 ];
@@ -105,27 +121,30 @@ function showWarning(text: string)
 function App() {
   var [variableValuesLength, setvariableValuesLength] = React.useState<number>(0);
   var [variables, setVariables] = React.useState<Variable[]>([]);
-  var [timestamps, setTimestamps] = React.useState<Variable[]>([]);
+  var [timestamps, setTimestamps] = React.useState<string[]>([]);
+  var [caseIds, setCaseIds] = React.useState<string[]>([]);
   var [columns, setColumns] = React.useState<Column[]>([]);
   var [rows, setRows] = React.useState<Row[]>([]);
 
-  const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number) =>
+  const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps, _caseIds: string[]=caseIds) =>
   {
-    setvariableValuesLength(_variableValuesLength);
     setVariables(_variables);
+    setvariableValuesLength(_variableValuesLength);
+    setTimestamps(_timestamps);
+    setCaseIds(_caseIds);
     setColumns(getColumns(_variables));
-    setRows(getRows(_variables, _variableValuesLength));
+    setRows(getRows(_variables, _variableValuesLength, _timestamps, _caseIds));
   }
   
   const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
     var colNames: string[] = columnIds.map((col) => (col as string))
-    if (targetColumnId === "i")
+    if (targetColumnId === "id" || targetColumnId === "timestamp" || targetColumnId === "case_id")
       return;
 
     updateSpreadsheet(reorderArray(variables, 
       getIndicesMatchingCondition(variables, (_var) => colNames.includes(getColNameFromVarName(_var.name))),
       getIndicesMatchingCondition(variables, (_var) => getColNameFromVarName(_var.name) === (targetColumnId as string))[0]
-    ), variableValuesLength);
+    ));
   }
 
   const handleColumnResize = (ci: Id, width: number) => {
@@ -148,14 +167,14 @@ function App() {
     const menuOptions: MenuOption[] = []
     if (selectionMode === "column")
     {
-      if (selectedColIds.includes("i"))
+      if (selectedColIds.includes("id") || selectedColIds.includes("timestamp") || selectedColIds.includes("case_id"))
         return menuOptions;
 
       menuOptions.push({
         id: "removeVariable",
         label: "Remove",
         handler: () => {
-          updateSpreadsheet(variables.filter((v) => !selectedColIds.includes(getColNameFromVarName(v.name))), variableValuesLength)
+          updateSpreadsheet(variables.filter((v) => !selectedColIds.includes(getColNameFromVarName(v.name))))
         }
       });
 
@@ -179,7 +198,22 @@ function App() {
         id: "changeType",
         label: "Change type",
         handler: () => {
-          
+          const _variables: Variable[] = variables.map((v) =>
+          {
+            if (!selectedColIds.includes(getColNameFromVarName(v.name)))
+              return v;
+            if (v.type == VariableType.CATEGORICAL && v.values.map((v2) => v2 === undefined ? undefined : Number(v2)).includes(NaN))
+            {
+              showWarning("Variable '" + v.name + "' can't be converted to numerical type!");
+              return v;
+            }
+            return new Variable(
+              v.name,
+              v.type == VariableType.NUMERICAL ? VariableType.CATEGORICAL : VariableType.NUMERICAL,
+              v.type == VariableType.NUMERICAL ? v.values.map((v2) => v2 === undefined ? undefined : v2 as string) : v.values.map((v2) => v2 === undefined ? undefined : Number(v2))
+            );
+          });
+          updateSpreadsheet(_variables);
         }
       });
     }
@@ -201,8 +235,8 @@ function App() {
         }
         else if (_var.type === VariableType.CATEGORICAL) 
           _var.values[change.rowId as number] = change.newCell.text
-        console.log(_variables)
-        updateSpreadsheet(_variables, variableValuesLength)
+        //console.log(_variables)
+        updateSpreadsheet(_variables)
         //change.rowId;
         //change.columnId;
         //change.newCell.text;
@@ -221,6 +255,7 @@ function App() {
     event.preventDefault();
 
     const separator: string = ";";
+    const decimalSeparator: string = ",";
 
     const fileReader = new FileReader();
     fileReader.onload = function (event: ProgressEvent<FileReader>) {
@@ -229,12 +264,18 @@ function App() {
       const csvOutput = event.target?.result as string;
 
       const _variables: Variable[] = []
+      const isNumber: boolean[] = []
       const csvHeader = csvOutput.slice(0, csvOutput.indexOf("\n")).split(separator);
       for (let i = 2; i < csvHeader.length - 1; i++) 
-        _variables.push({name: csvHeader[i], type: VariableType.CATEGORICAL, values: []})
+      {
+        _variables.push({name: csvHeader[i], type: VariableType.CATEGORICAL, values: []});
+        isNumber.push(true);
+      }
       
       const csvRows = csvOutput.slice(csvOutput.indexOf("\n") + 1).split("\n");
       var _variableValuesLength = csvRows.length;
+      const _timestamps: string[] = []
+      const _caseIds: string[] = []
       for (let i = 0; i < csvRows.length; i++) {
         const _values = csvRows[i].split(separator);
         if (_values.length === 1 && _values[0] === '')
@@ -243,10 +284,24 @@ function App() {
           break;
         }
         for (let j = 2; j < _values.length - 1; j++) 
+        {
+          if (isNaN(Number(_values[j].replace(decimalSeparator, "."))))
+            isNumber[j-2] = false;
           (_variables[j - 2].values as (string | undefined)[]).push(_values[j]);
+        }
+        _timestamps.push(_values[1]);
+        _caseIds.push(_values[_values.length - 1]);
       }
+      for (let i = 0; i < isNumber.length; i++)
+        if (isNumber[i])
+        {
+          if (new Set(_variables[i].values as string[]).size <= Math.min(_variables[i].values.length,300) / 30)
+            continue
+          _variables[i].type = VariableType.NUMERICAL;
+          _variables[i].values = _variables[i].values.map((v) => v === undefined ? undefined : Number((v as string).replace(decimalSeparator, ".")))
+        }
       //console.log(variableValuesLength)
-      updateSpreadsheet(_variables, _variableValuesLength);
+      updateSpreadsheet(_variables, _variableValuesLength, _timestamps, _caseIds);
     };
     const file = event.target.files?.[0];
     if (file) 
