@@ -5,7 +5,7 @@ import { Menu, MenuItem, MenuButton } from '@szhsin/react-menu';
 import '@szhsin/react-menu/dist/index.css';
 import "@silevis/reactgrid/styles.css";
 import 'react-toastify/dist/ReactToastify.css';
-import 'bulma/css/bulma.min.css';
+//import 'bulma/css/bulma.min.css';
 
 enum VariableType {
   CATEGORICAL = "C",
@@ -24,12 +24,12 @@ class Variable {
   }
 }
 
-const getVariables = (): Variable[] => [
+/*const getVariables = (): Variable[] => [
   {name: "var1", type: VariableType.CATEGORICAL, values: ["a","b",undefined,"d","e",undefined,"g","h"]},
   {name: "var2", type: VariableType.NUMERICAL, values: [0,1,2,3,undefined,4,5,6,7]},
   {name: "var3", type: VariableType.CATEGORICAL, values: ["a","d","5","d","e",undefined,"g","h"]},
   {name: "var4", type: VariableType.NUMERICAL, values: [0,1,2,3,undefined,4,5,6,7,5,5,6,7,8,9,9,9,9]}
-];
+];*/
 
 function getColNameFromVarName(_var: string): string 
 {
@@ -45,26 +45,26 @@ const getColumns = (variables: Variable[]): Column[] => [
   },
   ...variables.map<Column>((variable, idx) => ({
     columnId: getColNameFromVarName(variable.name),
-    width: 75, 
+    width: getColNameFromVarName(variable.name).length * 10, 
     resizable: true,
     reorderable: true
   }))
 ];
 
-const getRows = (variables: Variable[], num_values: number): Row[] => [
+const getRows = (variables: Variable[], numValues: number): Row[] => [
   {
     rowId: "header",
     cells: [
-      { type: "header", text: ""},
+      { type: "header", text: "ID"},
       ...variables.map<DefaultCellTypes>(
         (variable) => ({ type: "header", text: variable.name + " (" + variable.type + ")"})
       )
     ]
   },
-  ...Array.from(Array(num_values).keys()).map<Row>((idx) => ({
+  ...Array.from(Array(numValues).keys()).map<Row>((idx) => ({
     rowId: idx,
     cells: [
-      { type: "header", text: String(idx)},
+      { type: "header", text: String(idx+1)},
       ...variables.map<DefaultCellTypes>(
         (variable) => ({ type: "text", text: variable.values[idx] === undefined ? "" : String(variable.values[idx])})
       )
@@ -103,16 +103,18 @@ function showWarning(text: string)
 }
 
 function App() {
-  var variableValuesLength = 20
-  var [variables, setVariables] = React.useState<Variable[]>(getVariables());
-  var [columns, setColumns] = React.useState<Column[]>(getColumns(variables));
-  var [rows, setRows] = React.useState<Row[]>(getRows(variables, variableValuesLength));
+  var [variableValuesLength, setvariableValuesLength] = React.useState<number>(0);
+  var [variables, setVariables] = React.useState<Variable[]>([]);
+  var [timestamps, setTimestamps] = React.useState<Variable[]>([]);
+  var [columns, setColumns] = React.useState<Column[]>([]);
+  var [rows, setRows] = React.useState<Row[]>([]);
 
-  const updateSpreadsheet = (_variables: Variable[]) =>
+  const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number) =>
   {
+    setvariableValuesLength(_variableValuesLength);
     setVariables(_variables);
     setColumns(getColumns(_variables));
-    setRows(getRows(_variables, variableValuesLength))
+    setRows(getRows(_variables, _variableValuesLength));
   }
   
   const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
@@ -121,7 +123,7 @@ function App() {
     updateSpreadsheet(reorderArray(variables, 
       getIndicesMatchingCondition(variables, (_var) => colNames.includes(getColNameFromVarName(_var.name))),
       getIndicesMatchingCondition(variables, (_var) => getColNameFromVarName(_var.name) === (targetColumnId as string))[0]
-    ));
+    ), variableValuesLength);
   }
 
   const handleColumnResize = (ci: Id, width: number) => {
@@ -151,7 +153,7 @@ function App() {
         id: "removeVariable",
         label: "Remove",
         handler: () => {
-          updateSpreadsheet(variables.filter((v) => !selectedColIds.includes(getColNameFromVarName(v.name))))
+          updateSpreadsheet(variables.filter((v) => !selectedColIds.includes(getColNameFromVarName(v.name))), variableValuesLength)
         }
       });
 
@@ -195,10 +197,10 @@ function App() {
           else
             showWarning("Value is not a number!")
         }
-        else if (_var.type === VariableType.CATEGORICAL) {
+        else if (_var.type === VariableType.CATEGORICAL) 
           _var.values[change.rowId as number] = change.newCell.text
-        }
-        updateSpreadsheet(_variables)
+        console.log(_variables)
+        updateSpreadsheet(_variables, variableValuesLength)
         //change.rowId;
         //change.columnId;
         //change.newCell.text;
@@ -207,14 +209,63 @@ function App() {
     }); 
   }; 
 
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
+
+    const separator: string = ";";
+
+    const fileReader = new FileReader();
+    fileReader.onload = function (event: ProgressEvent<FileReader>) {
+      if (!event.target)
+        return;
+      const csvOutput = event.target?.result as string;
+
+      const _variables: Variable[] = []
+      const csvHeader = csvOutput.slice(0, csvOutput.indexOf("\n")).split(separator);
+      for (let i = 2; i < csvHeader.length - 1; i++) 
+        _variables.push({name: csvHeader[i], type: VariableType.CATEGORICAL, values: []})
+      
+      const csvRows = csvOutput.slice(csvOutput.indexOf("\n") + 1).split("\n");
+      var _variableValuesLength = csvRows.length;
+      for (let i = 0; i < csvRows.length; i++) {
+        const _values = csvRows[i].split(separator);
+        if (_values.length === 1 && _values[0] === '')
+        {
+          _variableValuesLength--;
+          break;
+        }
+        for (let j = 2; j < _values.length - 1; j++) 
+          (_variables[j - 2].values as (string | undefined)[]).push(_values[j]);
+      }
+      //console.log(variableValuesLength)
+      updateSpreadsheet(_variables, _variableValuesLength);
+    };
+    const file = event.target.files?.[0];
+    if (file) 
+      fileReader.readAsText(file);
+  };
+
   return <div style={{paddingRight: 10, paddingLeft: 10, paddingTop:5}}>
     <div className="box" style={{padding: 3, marginBottom: 5}}>
       <Menu menuButton={<MenuButton className="button is-light is-normal">File</MenuButton>} menuClassName="fileMenu">
-        <MenuItem>Import</MenuItem>
+        <MenuItem onClick={handleImportClick}>Import</MenuItem>
         <MenuItem>Export</MenuItem>
       </Menu>
+      <input
+        type="file"
+        accept=".csv"
+        ref={fileInputRef}
+        style={{display: 'none'}}
+        onChange={handleFileChange}
+      />
     </div>
-    <ReactGrid 
+    <ReactGrid
       rows={rows} 
       columns={columns} 
       onColumnResized={handleColumnResize} 
@@ -223,10 +274,9 @@ function App() {
       onContextMenu={handleContextMenu}
       enableColumnSelection 
       stickyTopRows={1} 
-      stickyLeftColumns={1}/>
-    <ToastContainer />
+      stickyLeftColumns={1}
+    />
+    <ToastContainer/>
   </div>
-    
-  ;
   }; 
 export default App;
