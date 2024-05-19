@@ -6,10 +6,14 @@ from django.http import FileResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from scipy.stats import stats
+
 from backend.settings import FILES_URL
 from data_manager.functions import get_file_url, calculate_stats, load_to_dataframe, save_from_dataframe
 
 from data_manager.missing_values_functions import complete_missing_values,replace_outliers_to_nan
+import uuid
+from data_manager.functions import get_file_url, calculate_stats, convert_data
 
 
 @api_view(["POST"])
@@ -67,13 +71,28 @@ def fill_missing_values(request):
             return Response(data=dict(detail=str(e)), status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["GET"])
+
+@api_view(["POST"])
 def stats_1d(request):
-    # parameters = dict()
-    functions = request.GET.getlist("functions[]")
-    string_data = request.GET.getlist("data[]")
-    data = np.array(string_data, dtype=float)
-    results = dict()
-    for function in functions:
-        results[function] = calculate_stats(function, data)
-    return Response(data=results, status=status.HTTP_200_OK)
+    if request.method == "POST":
+        if "functions[]" not in request.data or "data[]" not in request.data:
+            return Response(data=dict(detail="Cannot find functions or data"), status=status.HTTP_400_BAD_REQUEST)
+        functions = request.data.getlist("functions[]")
+        string_data = request.data.getlist("data[]")
+        all_data = np.array([convert_data(value) for value in string_data])
+        num_data = all_data[np.logical_not(np.isnan(all_data))]
+        results = dict()
+        for function in functions:
+            if function == "mode":
+                # return only one value
+                results[function] = stats.mode(num_data).mode
+            elif function == "precentile":
+                quartiles = np.percentile(num_data, [25, 50, 75])
+                results["quartile25"] = quartiles[0]
+                results["quartile50"] = quartiles[1]
+                results["quartile75"] = quartiles[2]
+            elif function == "missing":
+                results["missing"] = np.isnan(all_data).sum()
+            else:
+                results[function] = calculate_stats(function, num_data)
+        return Response(data=results, status=status.HTTP_200_OK)

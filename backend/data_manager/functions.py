@@ -24,15 +24,17 @@ def save_from_dataframe(destination: str, df: pd.DataFrame) -> None:
     df.to_csv(file_url, index=False, sep=';', decimal=",")
 
 
+
+def convert_data(value):
+    try:
+        return float(value)
+    except ValueError:
+        return np.nan
+
+
 def calculate_stats(function_name: str, data):
     if function_name in numpy_functions.keys():
         return numpy_functions.get(function_name)(data)
     if function_name in scipy_functions.keys():
         return scipy_functions.get(function_name)(data)
-    # if function_name == "mode":
-    #     return stats.mode(data).mode[0]
-    # if function_name == "precentile":
-    #     return np.percentile(data, [25, 50, 75])
-    # if function_name == "isnan":
-    #     return np.isnan(data).sum()
     # TODO: error handle
