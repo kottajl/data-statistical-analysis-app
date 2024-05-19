@@ -9,11 +9,13 @@ from rest_framework.response import Response
 from scipy.stats import stats
 
 from backend.settings import FILES_URL
-from data_manager.functions import get_file_url, calculate_stats, load_to_dataframe, save_from_dataframe
+from data_manager.functions import get_file_url, load_to_dataframe, save_from_dataframe
 
 from data_manager.missing_values_functions import complete_missing_values,replace_outliers_to_nan
 import uuid
-from data_manager.functions import get_file_url, calculate_stats, convert_data
+from data_manager.functions import get_file_url
+from data_manager.stats_1d_functions import convert_data, calculate_numerical_stats, get_numerical_stats, \
+    get_categorical_stats
 
 
 @api_view(["POST"])
@@ -79,24 +81,23 @@ def stats_1d(request):
             return Response(data=dict(detail="Cannot find functions or data"), status=status.HTTP_400_BAD_REQUEST)
         functions = request.data.getlist("functions[]")
         string_data = request.data.getlist("data[]")
-        all_data = np.array([convert_data(value) for value in string_data])
-        num_data = all_data[np.logical_not(np.isnan(all_data))]
         if len(functions) == 0:
-            return Response(data=dict(detail="Must choose at least one function"))
-        if len(all_data) == 0:
-            return Response(data=dict(detail="Must give at least one data"))
-        results = dict()
-        for function in functions:
-            if function == "mode":
-                # return only one value
-                results[function] = stats.mode(num_data).mode
-            elif function == "precentile":
-                quartiles = np.percentile(num_data, [25, 50, 75])
-                results["quartile25"] = quartiles[0]
-                results["quartile50"] = quartiles[1]
-                results["quartile75"] = quartiles[2]
-            elif function == "missing":
-                results["missing"] = np.isnan(all_data).sum()
-            else:
-                results[function] = calculate_stats(function, num_data)
+            return Response(data=dict(detail="Must choose at least one function"), status=status.HTTP_400_BAD_REQUEST)
+        if len(string_data) == 0:
+            return Response(data=dict(detail="Must give at least one data"), status=status.HTTP_400_BAD_REQUEST)
+
+        if not request.data.__contains__("type") or request.data["type"] == "numerical":
+            all_data = np.array([convert_data(value) for value in string_data])
+            if all(np.isnan(element) for element in all_data):
+                return Response(data=dict(detail="Must give at least one data"), status=status.HTTP_400_BAD_REQUEST)
+
+            results = get_numerical_stats(functions, all_data)
+        elif request.data["type"] == 'categorical':
+            all_data = [data if data != "null" else None for data in string_data]
+            if all([element is None for element in all_data]):
+                return Response(data=dict(detail="Must give at least one data"), status=status.HTTP_400_BAD_REQUEST)
+
+            results = get_categorical_stats(functions, all_data)
+        else:
+            return Response(data=dict(detail="Wrong type (must be numerical or categorical)"), status=status.HTTP_400_BAD_REQUEST)
         return Response(data=results, status=status.HTTP_200_OK)

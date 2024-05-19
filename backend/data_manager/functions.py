@@ -22,19 +22,3 @@ def load_to_dataframe(destination: str) -> pd.DataFrame:
 def save_from_dataframe(destination: str, df: pd.DataFrame) -> None:
     file_url = get_file_url(destination)
     df.to_csv(file_url, index=False, sep=';', decimal=",")
-
-
-
-def convert_data(value):
-    try:
-        return float(value)
-    except ValueError:
-        return np.nan
-
-
-def calculate_stats(function_name: str, data):
-    if function_name in numpy_functions.keys():
-        return numpy_functions.get(function_name)(data)
-    if function_name in scipy_functions.keys():
-        return scipy_functions.get(function_name)(data)
-    return "Function is not supported"
