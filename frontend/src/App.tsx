@@ -2,6 +2,8 @@ import * as React from "react";
 import { ReactGrid, Column, Row, CellChange, TextCell, DefaultCellTypes, Id, MenuOption, CellLocation, SelectionMode } from "@silevis/reactgrid";
 import { ToastContainer, toast } from 'react-toastify';
 import { Menu, MenuItem, MenuButton } from '@szhsin/react-menu';
+import PureModal from 'react-pure-modal';
+import 'react-pure-modal/dist/react-pure-modal.min.css';
 import '@szhsin/react-menu/dist/index.css';
 import "@silevis/reactgrid/styles.css";
 import 'react-toastify/dist/ReactToastify.css';
@@ -125,6 +127,11 @@ function App() {
   var [caseIds, setCaseIds] = React.useState<string[]>([]);
   var [columns, setColumns] = React.useState<Column[]>([]);
   var [rows, setRows] = React.useState<Row[]>([]);
+  var [isStatModalOpen, setStatModalOpen] = React.useState<boolean>(false);
+  var [isStatResultModalOpen, setStatResultModalOpen] = React.useState<boolean>(false);
+  var [selectedColIds, setSelectedColIds] = React.useState<Id[]>([]);
+
+  const serverAddress = "http://127.0.0.1:8000";
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps, _caseIds: string[]=caseIds) =>
   {
@@ -179,22 +186,6 @@ function App() {
       });
 
       menuOptions.push({
-        id: "fillMissingValues",
-        label: "Fill missing values",
-        handler: () => {
-          
-        }
-      });
-
-      menuOptions.push({
-        id: "removeOutliers",
-        label: "Remove outlier values",
-        handler: () => {
-          
-        }
-      });
-
-      menuOptions.push({
         id: "changeType",
         label: "Change type",
         handler: () => {
@@ -202,20 +193,49 @@ function App() {
           {
             if (!selectedColIds.includes(getColNameFromVarName(v.name)))
               return v;
-            if (v.type == VariableType.CATEGORICAL && v.values.map((v2) => v2 === undefined ? undefined : Number(v2)).includes(NaN))
+            if (v.type === VariableType.CATEGORICAL && v.values.map((v2) => v2 === undefined ? undefined : Number(v2)).includes(NaN))
             {
               showWarning("Variable '" + v.name + "' can't be converted to numerical type!");
               return v;
             }
             return new Variable(
               v.name,
-              v.type == VariableType.NUMERICAL ? VariableType.CATEGORICAL : VariableType.NUMERICAL,
-              v.type == VariableType.NUMERICAL ? v.values.map((v2) => v2 === undefined ? undefined : v2 as string) : v.values.map((v2) => v2 === undefined ? undefined : Number(v2))
+              v.type === VariableType.NUMERICAL ? VariableType.CATEGORICAL : VariableType.NUMERICAL,
+              v.type === VariableType.NUMERICAL ? v.values.map((v2) => v2 === undefined ? undefined : v2 as string) : v.values.map((v2) => v2 === undefined ? undefined : Number(v2))
             );
           });
           updateSpreadsheet(_variables);
         }
       });
+
+      // NUMERICAL VARIABLES ONLY
+      if (variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)) && v.type === VariableType.CATEGORICAL).length == 0)
+      {
+        menuOptions.push({
+          id: "calculateStatistics",
+          label: "Calculate statistics",
+          handler: () => {
+            setSelectedColIds(selectedColIds);
+            setStatModalOpen(true);           
+          }
+        });
+
+        /*menuOptions.push({
+          id: "fillMissingValues",
+          label: "Fill missing values",
+          handler: () => {
+            
+          }
+        });
+
+        menuOptions.push({
+          id: "removeOutliers",
+          label: "Remove outlier values",
+          handler: () => {
+            
+          }
+        });*/
+      }
     }
     return menuOptions;
   }
@@ -308,6 +328,19 @@ function App() {
       fileReader.readAsText(file);
   };
 
+  const [selMean, setSelMean] = React.useState(false);
+  const [selMedian, setSelMedian] = React.useState(false);
+  const [selMode, setSelMode] = React.useState(false);
+  const [selStd, setSelStd] = React.useState(false);
+  const [selMin, setSelMin] = React.useState(false);
+  const [selMax, setSelMax] = React.useState(false);
+  const [selUnique, setSelUnique] = React.useState(false);
+  const [selIqr, setSelIqr] = React.useState(false);
+  const [selSkew, setSelSkew] = React.useState(false);
+  const [selKurtosis, setSelKurtosis] = React.useState(false);
+  const [selPercentile, setSelPercentile] = React.useState(false);
+  const [selMissing, setSelMissing] = React.useState(false);
+
   return <div style={{paddingRight: 10, paddingLeft: 10, paddingTop:5}}>
     <div className="box" style={{padding: 3, marginBottom: 5}}>
       <Menu menuButton={<MenuButton className="button is-light is-normal">File</MenuButton>} menuClassName="fileMenu">
@@ -334,6 +367,74 @@ function App() {
       stickyLeftColumns={1}
     />
     <ToastContainer/>
+    <PureModal
+      header="Calculate statistics"
+      footer=""
+      isOpen={isStatModalOpen}
+      closeButton="X"
+      closeButtonPosition="header"
+      onClose={() => {
+        setStatModalOpen(false);
+        return true;
+      }}
+    >
+    <form style={{display: 'flex', flexDirection: 'column'}}>
+          <label style={{margin: 5}}><input type="checkbox" checked={selMean} onChange={() => setSelMean(!selMean)}/> Mean</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selMedian} onChange={() => setSelMedian(!selMedian)}/> Median</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selMode} onChange={() => setSelMode(!selMode)}/> Mode</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selStd} onChange={() => setSelStd(!selStd)}/> Std</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selMin} onChange={() => setSelMin(!selMin)}/> Min</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selMax} onChange={() => setSelMax(!selMax)}/> Max</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selUnique} onChange={() => setSelUnique(!selUnique)}/> Unique</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selIqr} onChange={() => setSelIqr(!selIqr)}/> Iqr</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selSkew} onChange={() => setSelSkew(!selSkew)}/> Skew</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selKurtosis} onChange={() => setSelKurtosis(!selKurtosis)}/> Kurtosis</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selPercentile} onChange={() => setSelPercentile(!selPercentile)}/> Percentile</label>
+          <label style={{margin: 5}}><input type="checkbox" checked={selMissing} onChange={() => setSelMissing(!selMissing)}/> Missing</label>
+          <input style={{margin: 5}} type="button" value="Calculate" onClick={(e) => {
+            variables.filter((v) => selectedColIds.includes(getColNameFromVarName(v.name))).forEach( v =>
+              {
+                const data = new URLSearchParams();
+                if (selMean)
+                  data.append('functions[]', "mean")
+                if (selMedian)
+                  data.append('functions[]', "median")
+                if (selMode)
+                  data.append('functions[]', "mode")
+                if (selStd)
+                  data.append('functions[]', "std")
+                if (selMin)
+                  data.append('functions[]', "min")
+                if (selMax)
+                  data.append('functions[]', "max")
+                if (selUnique)
+                  data.append('functions[]', "unique")
+                if (selIqr)
+                  data.append('functions[]', "iqr")
+                if (selSkew)
+                  data.append('functions[]', "skew")
+                if (selKurtosis)
+                  data.append('functions[]', "kurtosis")
+                if (selPercentile)
+                  data.append('functions[]', "precentile")
+                if (selMissing)
+                  data.append('functions[]', "missing")
+                
+                v.values.forEach( v2 => data.append('data[]', String(v2 === undefined ? null : v2)))
+  
+                const requestOptions = {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: data.toString()
+                };
+  
+                fetch(serverAddress+"/api/1d_stats/", requestOptions)
+                  .then(response => response.json())
+                  .then(response => console.log(response));
+              });
+          }}/>
+      </form>
+    </PureModal>
   </div>
   }; 
 export default App;
