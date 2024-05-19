@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import uuid
 from django.http import FileResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -8,6 +9,9 @@ from rest_framework.response import Response
 from scipy.stats import stats
 
 from backend.settings import FILES_URL
+from data_manager.functions import get_file_url, calculate_stats, load_to_dataframe, save_from_dataframe
+
+from data_manager.missing_values_functions import complete_missing_values,replace_outliers_to_nan
 import uuid
 from data_manager.functions import get_file_url, calculate_stats, convert_data
 
@@ -37,11 +41,35 @@ def data_import(request):
 @api_view(["POST"])
 def data_export(request):
     if request.method == "POST":
-        if "destination" in request.data and isinstance(request.data["destination"], str) and get_file_url(
-                request.data["destination"]) != "":
-            return FileResponse(open(get_file_url(request.data["destination"]), 'rb'), content_type="text/csv",
-                                as_attachment=True)
-        return Response(data=dict(detail="File does not exist"), status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if "destination" in request.data and isinstance(request.data["destination"], str):
+                file_url = get_file_url(request.data["destination"])
+                return FileResponse(open(file_url, 'rb'), content_type="text/csv",
+                                    as_attachment=True)
+            raise Exception("Invalid data")
+        except Exception as e:
+            return Response(data=dict(detail=str(e)), status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+def fill_missing_values(request):
+    if request.method == "POST":
+        try:
+            if "destination" in request.data and isinstance(request.data["destination"],
+                                                            str) and "variable" in request.data and "method" in request.data and "outliers" in request.data:
+                destination = request.data["destination"]
+                variable, method, outliers = request.data["variable"], request.data["method"], request.data["outliers"]
+                df = load_to_dataframe(destination)
+                if outliers:
+                    replace_outliers_to_nan(df, variable)
+                complete_missing_values(df, variable, method, request.data.get("constant"))
+                save_from_dataframe(destination, df)
+
+                return Response(data=dict(detail="Variable updated"), status=status.HTTP_200_OK)
+            raise Exception("Invalid data")
+        except Exception as e:
+            return Response(data=dict(detail=str(e)), status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(["POST"])
