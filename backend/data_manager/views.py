@@ -53,6 +53,10 @@ def stats_1d(request):
         string_data = request.data.getlist("data[]")
         all_data = np.array([convert_data(value) for value in string_data])
         num_data = all_data[np.logical_not(np.isnan(all_data))]
+        if len(functions) == 0:
+            return Response(data=dict(detail="Must choose at least one function"))
+        if len(all_data) == 0:
+            return Response(data=dict(detail="Must give at least one data"))
         results = dict()
         for function in functions:
             if function == "mode":

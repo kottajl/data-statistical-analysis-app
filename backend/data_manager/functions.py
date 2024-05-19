@@ -23,4 +23,4 @@ def calculate_stats(function_name: str, data):
         return numpy_functions.get(function_name)(data)
     if function_name in scipy_functions.keys():
         return scipy_functions.get(function_name)(data)
-    # TODO: error handle
+    return "Function is not supported"
