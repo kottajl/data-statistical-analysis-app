@@ -3,7 +3,7 @@ import { ReactGrid, Column, Row, CellChange, TextCell, DefaultCellTypes, Id, Men
 import { serverAddress } from "../App"
 import PureModal from 'react-pure-modal';
 import 'react-pure-modal/dist/react-pure-modal.min.css';
-import { getColNameFromVarName, Variable } from "../classes/Variable"
+import { getColNameFromVarName, Variable, VariableType } from "../classes/Variable"
 
 interface CalculateStatisticsModalsProps {
     variables: Variable[];
@@ -88,6 +88,10 @@ export function CalculateStatisticsModals({variables, selectedColIds, isStatModa
             const data = new URLSearchParams();
             f.forEach(_f => data.append("functions[]", _f));
             v.values.forEach(v2 => data.append('data[]', String(v2 === undefined ? null : v2)))
+            if (v.type === VariableType.CATEGORICAL)
+                data.append("type", "categorical");
+            else
+                data.append("type", "numerical");
             const requestOptions = {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -108,7 +112,7 @@ export function CalculateStatisticsModals({variables, selectedColIds, isStatModa
             numData += 2;
           }
           if (f.includes("unique"))
-            results.forEach(r => r.data["unique"] = r.data["unique"].length)
+            results.filter(r => r.var.type === VariableType.NUMERICAL).forEach(r => r.data["unique"] = r.data["unique"].length)
           setColumns2([
             {
               columnId: "Statistic",
@@ -140,7 +144,7 @@ export function CalculateStatisticsModals({variables, selectedColIds, isStatModa
                 { type: "header", text: f[idx]},
                 ...results.map<DefaultCellTypes>((result) => ({
                   type: "header",
-                  text: String(Math.round((result as any).data[f[idx]] * 100) / 100)}
+                  text: isNaN(+(result as any).data[f[idx]]) ? "-" : String(Math.round((result as any).data[f[idx]] * 100) / 100)}
                 )
                 )
               ]

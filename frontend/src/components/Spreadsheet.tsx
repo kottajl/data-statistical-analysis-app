@@ -166,18 +166,19 @@ export function Spreadsheet({
               updateSpreadsheet(_variables);
             }
           });
+          
+          menuOptions.push({
+            id: "calculateStatistics",
+            label: "Calculate statistics",
+            handler: () => {
+              setSelectedColIds(selectedColIds);
+              setStatModalOpen(true);           
+            }
+          });
     
           // NUMERICAL VARIABLES ONLY
           if (variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)) && v.type === VariableType.CATEGORICAL).length === 0)
           {
-            menuOptions.push({
-              id: "calculateStatistics",
-              label: "Calculate statistics",
-              handler: () => {
-                setSelectedColIds(selectedColIds);
-                setStatModalOpen(true);           
-              }
-            });
     
             /*menuOptions.push({
               id: "fillMissingValues",

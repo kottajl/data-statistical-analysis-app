@@ -47,7 +47,7 @@ export function TopMenu({ updateSpreadsheet }: { updateSpreadsheet: (_variables:
           {
             if (isNaN(Number(_values[j].replace(decimalSeparator, "."))))
               isNumber[j-2] = false;
-            (_variables[j - 2].values as (string | undefined)[]).push(_values[j]);
+            (_variables[j - 2].values as (string | undefined)[]).push(_values[j] === "" ? undefined : _values[j]);
           }
           _timestamps.push(_values[1]);
           _caseIds.push(_values[_values.length - 1]);
@@ -58,7 +58,7 @@ export function TopMenu({ updateSpreadsheet }: { updateSpreadsheet: (_variables:
             if (new Set(_variables[i].values as string[]).size <= Math.min(_variables[i].values.length,300) / 30)
               continue
             _variables[i].type = VariableType.NUMERICAL;
-            _variables[i].values = _variables[i].values.map((v) => v === "" ? undefined : Number((v as string).replace(decimalSeparator, ".")))
+            _variables[i].values = _variables[i].values.map((v) => v === undefined ? undefined : Number((v as string).replace(decimalSeparator, ".")))
           }
           //console.log(variableValuesLength)
       updateSpreadsheet(_variables, _variableValuesLength, _timestamps, _caseIds);
