@@ -7,8 +7,6 @@ def fill_nan(df: pd.DataFrame, col: str, value):
 
 
 def complete_missing_values(df: pd.DataFrame, variable: str, method: str, constant: str = None):
-    if variable not in df.columns:
-        raise ValueError(f'Variable {variable} not found in dataframe')
 
     match method:
         case "mean":

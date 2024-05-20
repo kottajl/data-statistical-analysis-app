@@ -2,6 +2,8 @@ import os
 
 import numpy as np
 import uuid
+
+import pandas as pd
 from django.http import FileResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -55,17 +57,17 @@ def data_export(request):
 def fill_missing_values(request):
     if request.method == "POST":
         try:
-            if "destination" in request.data and isinstance(request.data["destination"],
-                                                            str) and "variable" in request.data and "method" in request.data and "outliers" in request.data:
-                destination = request.data["destination"]
-                variable, method, outliers = request.data["variable"], request.data["method"], request.data["outliers"]
-                df = load_to_dataframe(destination)
+            if "data[]" in request.data and request.data and "method" in request.data and "outliers" in request.data:
+                string_data, method, outliers = request.data.getlist("data[]"), request.data["method"], request.data["outliers"]
+                if method == "constant" and "constant" not in request.data:
+                    raise Exception("Invalid data")
+                variable = "Variable"
+                df = pd.DataFrame([convert_data(value) for value in string_data], columns=[variable])
                 if outliers:
                     replace_outliers_to_nan(df, variable)
                 complete_missing_values(df, variable, method, request.data.get("constant"))
-                save_from_dataframe(destination, df)
 
-                return Response(data=dict(detail="Variable updated"), status=status.HTTP_200_OK)
+                return Response(data=dict(data=df[variable].to_list()), status=status.HTTP_200_OK)
             raise Exception("Invalid data")
         except Exception as e:
             return Response(data=dict(detail=str(e)), status=status.HTTP_400_BAD_REQUEST)
