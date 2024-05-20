@@ -128,7 +128,7 @@ function App() {
   var [columns, setColumns] = React.useState<Column[]>([]);
   var [rows, setRows] = React.useState<Row[]>([]);
   var [isStatModalOpen, setStatModalOpen] = React.useState<boolean>(false);
-  var [isStatResultModalOpen, setStatResultModalOpen] = React.useState<boolean>(false);
+  var [isResultModalOpen, setResultModalOpen] = React.useState<boolean>(false);
   var [selectedColIds, setSelectedColIds] = React.useState<Id[]>([]);
 
   const serverAddress = "http://127.0.0.1:8000";
@@ -247,14 +247,22 @@ function App() {
         const _variables = variables
         const _var = _variables.filter((v) => getColNameFromVarName(v.name) === change.columnId)[0]
         if (_var.type === VariableType.NUMERICAL) {
-          const new_val = +change.newCell.text as number
-          if (!isNaN(new_val))
-            _var.values[change.rowId as number] = new_val
+          if (change.newCell.text == "")
+            _var.values[change.rowId as number] = undefined
           else
-            showWarning("Value is not a number!")
+          {
+            const new_val = +change.newCell.text as number
+            if (!isNaN(new_val))
+              _var.values[change.rowId as number] = new_val
+            else
+              showWarning("Value is not a number!")
+          }
         }
         else if (_var.type === VariableType.CATEGORICAL) 
-          _var.values[change.rowId as number] = change.newCell.text
+          if (change.newCell.text == "")
+            _var.values[change.rowId as number] = undefined
+          else
+            _var.values[change.rowId as number] = change.newCell.text
         //console.log(_variables)
         updateSpreadsheet(_variables)
         //change.rowId;
@@ -318,7 +326,7 @@ function App() {
           if (new Set(_variables[i].values as string[]).size <= Math.min(_variables[i].values.length,300) / 30)
             continue
           _variables[i].type = VariableType.NUMERICAL;
-          _variables[i].values = _variables[i].values.map((v) => v === undefined ? undefined : Number((v as string).replace(decimalSeparator, ".")))
+          _variables[i].values = _variables[i].values.map((v) => v === "" ? undefined : Number((v as string).replace(decimalSeparator, ".")))
         }
       //console.log(variableValuesLength)
       updateSpreadsheet(_variables, _variableValuesLength, _timestamps, _caseIds);
@@ -328,18 +336,21 @@ function App() {
       fileReader.readAsText(file);
   };
 
-  const [selMean, setSelMean] = React.useState(false);
-  const [selMedian, setSelMedian] = React.useState(false);
-  const [selMode, setSelMode] = React.useState(false);
-  const [selStd, setSelStd] = React.useState(false);
-  const [selMin, setSelMin] = React.useState(false);
-  const [selMax, setSelMax] = React.useState(false);
-  const [selUnique, setSelUnique] = React.useState(false);
-  const [selIqr, setSelIqr] = React.useState(false);
-  const [selSkew, setSelSkew] = React.useState(false);
-  const [selKurtosis, setSelKurtosis] = React.useState(false);
-  const [selPercentile, setSelPercentile] = React.useState(false);
-  const [selMissing, setSelMissing] = React.useState(false);
+  const [selMean, setSelMean] = React.useState(true);
+  const [selMedian, setSelMedian] = React.useState(true);
+  const [selMode, setSelMode] = React.useState(true);
+  const [selStd, setSelStd] = React.useState(true);
+  const [selMin, setSelMin] = React.useState(true);
+  const [selMax, setSelMax] = React.useState(true);
+  const [selUnique, setSelUnique] = React.useState(true);
+  const [selIqr, setSelIqr] = React.useState(true);
+  const [selSkew, setSelSkew] = React.useState(true);
+  const [selKurtosis, setSelKurtosis] = React.useState(true);
+  const [selPercentile, setSelPercentile] = React.useState(true);
+  const [selMissing, setSelMissing] = React.useState(true);
+
+  var [columns2, setColumns2] = React.useState<Column[]>([]);
+  var [rows2, setRows2] = React.useState<Row[]>([]);
 
   return <div style={{paddingRight: 10, paddingLeft: 10, paddingTop:5}}>
     <div className="box" style={{padding: 3, marginBottom: 5}}>
@@ -392,48 +403,123 @@ function App() {
           <label style={{margin: 5}}><input type="checkbox" checked={selPercentile} onChange={() => setSelPercentile(!selPercentile)}/> Percentile</label>
           <label style={{margin: 5}}><input type="checkbox" checked={selMissing} onChange={() => setSelMissing(!selMissing)}/> Missing</label>
           <input style={{margin: 5}} type="button" value="Calculate" onClick={(e) => {
-            variables.filter((v) => selectedColIds.includes(getColNameFromVarName(v.name))).forEach( v =>
+            const _variables = variables.filter((v) => selectedColIds.includes(getColNameFromVarName(v.name)))
+            const results: any[] = new Array(_variables.length);
+            const promises: any[] = new Array(_variables.length);
+            var f: string[] = []
+            if (selMean)
+              f.push("mean")
+            if (selMedian)
+              f.push("median")
+            if (selMode)
+              f.push("mode")
+            if (selStd)
+              f.push("std")
+            if (selMin)
+              f.push("min")
+            if (selMax)
+              f.push("max")
+            if (selUnique)
+              f.push("unique")
+            if (selIqr)
+              f.push("iqr")
+            if (selSkew)
+              f.push("skew")
+            if (selKurtosis)
+              f.push("kurtosis")
+            if (selPercentile)
+              f.push("precentile")
+            if (selMissing)
+              f.push("missing")
+            var numData: number = f.length;
+            _variables.forEach((v, idx) =>
               {
                 const data = new URLSearchParams();
-                if (selMean)
-                  data.append('functions[]', "mean")
-                if (selMedian)
-                  data.append('functions[]', "median")
-                if (selMode)
-                  data.append('functions[]', "mode")
-                if (selStd)
-                  data.append('functions[]', "std")
-                if (selMin)
-                  data.append('functions[]', "min")
-                if (selMax)
-                  data.append('functions[]', "max")
-                if (selUnique)
-                  data.append('functions[]', "unique")
-                if (selIqr)
-                  data.append('functions[]', "iqr")
-                if (selSkew)
-                  data.append('functions[]', "skew")
-                if (selKurtosis)
-                  data.append('functions[]', "kurtosis")
-                if (selPercentile)
-                  data.append('functions[]', "precentile")
-                if (selMissing)
-                  data.append('functions[]', "missing")
-                
+                f.forEach(_f => data.append("functions[]", _f));
                 v.values.forEach( v2 => data.append('data[]', String(v2 === undefined ? null : v2)))
-  
                 const requestOptions = {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                   body: data.toString()
                 };
   
-                fetch(serverAddress+"/api/1d_stats/", requestOptions)
-                  .then(response => response.json())
-                  .then(response => console.log(response));
+                promises[idx] = fetch(serverAddress+"/api/1d_stats/", requestOptions)
+                .then(response => response.json())
+                .then(response => results[idx] = {var: v, data: response})
               });
+              Promise.all(promises).then(r => {
+              if (f.includes("precentile"))
+              {
+                f = f.filter(_f => _f !== "precentile");
+                f.push("quartile25");
+                f.push("quartile50");
+                f.push("quartile75");
+                numData += 2;
+              }
+              if (f.includes("unique"))
+                results.forEach(r => r.data["unique"] = r.data["unique"].length)
+              setColumns2([
+                {
+                  columnId: "Statistic",
+                  width:100,
+                  resizable: false,
+                  reorderable: false
+                },
+                ...results.map<Column>((result, idx) => ({
+                  columnId: getColNameFromVarName((result as any).var.name),
+                  width: (getColNameFromVarName((result as any).var.name).length + 4) * 10, 
+                  resizable: false,
+                  reorderable: false
+                })),
+              ]);
+              setRows2([
+                {
+                  rowId: "header",
+                  cells: [
+                    { type: "header", text: "Statistic"},
+                    ...results.map<DefaultCellTypes>((result, idx) => ({
+                      type: "header",
+                      text: (result as any).var.name + " (" + (result as any).var.type + ")"})
+                    ),
+                  ]
+                },
+                ...Array.from(Array(numData).keys()).map<Row>((idx) => ({
+                  rowId: idx,
+                  cells: [
+                    { type: "header", text: f[idx]},
+                    ...results.map<DefaultCellTypes>((result) => ({
+                      type: "header",
+                      text: String(Math.round((result as any).data[f[idx]] * 100) / 100)}
+                    )
+                    )
+                  ]
+                }))
+              ]);
+              setStatModalOpen(false);
+              setResultModalOpen(true);
+            }
+            )
           }}/>
       </form>
+    </PureModal>
+    
+    <PureModal
+      header="Results"
+      footer=""
+      width = "90%"
+      isOpen={isResultModalOpen}
+      closeButton="X"
+      closeButtonPosition="header"
+      onClose={() => {
+        setResultModalOpen(false);
+        return true;
+      }}>
+      <div style = {{overflow:"auto", whiteSpace: "nowrap"}}>
+    <ReactGrid
+      rows={rows2} 
+      columns={columns2}
+    />
+    </div>
     </PureModal>
   </div>
   }; 
