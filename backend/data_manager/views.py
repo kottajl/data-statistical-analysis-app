@@ -1,20 +1,13 @@
 import os
-
-import numpy as np
 import uuid
-
+import numpy as np
 import pandas as pd
 from django.http import FileResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from scipy.stats import stats
-
 from backend.settings import FILES_URL
-from data_manager.functions import get_file_url, load_to_dataframe, save_from_dataframe
-
 from data_manager.missing_values_functions import complete_missing_values,replace_outliers_to_nan
-import uuid
 from data_manager.functions import get_file_url
 from data_manager.stats_1d_functions import convert_data, calculate_numerical_stats, get_numerical_stats, \
     get_categorical_stats
@@ -59,7 +52,7 @@ def data_export(request):
 def fill_missing_values(request):
     if request.method == "POST":
         try:
-            if "data[]" in request.data and request.data and "method" in request.data and "outliers" in request.data:
+            if "data[]" in request.data and "method" in request.data and "outliers" in request.data:
                 string_data, method, outliers = request.data.getlist("data[]"), request.data["method"], request.data["outliers"]
                 if method == "constant" and "constant" not in request.data:
                     raise Exception("Invalid data")

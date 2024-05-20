@@ -18,4 +18,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path('api/', include('data_manager.urls')),
+    path('api/plots/', include('data_visualization.urls')),
 ]
