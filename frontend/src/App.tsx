@@ -7,6 +7,7 @@ import { Notifications } from "./components/Notifications"
 import { Variable } from "./classes/Variable"
 import { Id } from "@silevis/reactgrid";
 import { FileImportModal } from "./components/FileImportModal";
+import { FileExportModal } from "./components/FileExportModal";
 //import 'bulma/css/bulma.min.css';
 
 export const serverAddress = "http://127.0.0.1:8000";
@@ -21,6 +22,7 @@ function App() {
   var [rows, setRows] = React.useState<Row[]>([]);
   var [isStatModalOpen, setStatModalOpen] = React.useState<boolean>(false);
   var [isFileImportModalOpen, setFileImportModalOpen] = React.useState<boolean>(false);
+  var [isFileExportModalOpen, setFileExportModalOpen] = React.useState<boolean>(false);
   var [csvOutput, setCsvOutput] = React.useState<string>("");
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps, _caseIds: string[]=caseIds) =>
@@ -35,7 +37,8 @@ function App() {
 
   return <div style={{paddingRight: 10, paddingLeft: 10, paddingTop:5}}>
     <TopMenu setCsvOutput={setCsvOutput}
-              setFileImportModalOpen = {setFileImportModalOpen}/>
+              setFileImportModalOpen = {setFileImportModalOpen}
+              setFileExportModalOpen = {setFileExportModalOpen}/>
     <Spreadsheet variables={variables}
                 setVariables={setVariables}
                 variableValuesLength={variableValuesLength}
@@ -60,6 +63,11 @@ function App() {
                       setFileImportModalOpen={setFileImportModalOpen}
                       csvOutput={csvOutput}
                       updateSpreadsheet={updateSpreadsheet}/>
+    <FileExportModal isFileExportModalOpen={isFileExportModalOpen} 
+                      setFileExportModalOpen={setFileExportModalOpen}
+                      variables={variables}
+                      timestamps={timestamps}
+                      caseIds={caseIds}/>
     <Notifications/>
   </div>
   }; 

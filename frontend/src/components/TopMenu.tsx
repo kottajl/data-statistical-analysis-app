@@ -6,9 +6,10 @@ import { Variable, VariableType } from "../classes/Variable"
 interface TopMenuProps {
   setCsvOutput: React.Dispatch<React.SetStateAction<string>>;
   setFileImportModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setFileExportModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function TopMenu({setCsvOutput, setFileImportModalOpen}: TopMenuProps) {
+export function TopMenu({setCsvOutput, setFileImportModalOpen, setFileExportModalOpen}: TopMenuProps) {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleImportClick = () => {
@@ -37,7 +38,7 @@ export function TopMenu({setCsvOutput, setFileImportModalOpen}: TopMenuProps) {
   return <div className="box" style={{padding: 3, marginBottom: 5}}>
     <Menu menuButton={<MenuButton className="button is-light is-normal">File</MenuButton>} menuClassName="fileMenu">
         <MenuItem onClick={handleImportClick}>Import</MenuItem>
-        <MenuItem>Export</MenuItem>
+        <MenuItem onClick={e => {setFileExportModalOpen(true)}}>Export</MenuItem>
     </Menu>
     <input
         type="file"
