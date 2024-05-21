@@ -8,6 +8,7 @@ import { Variable } from "./classes/Variable"
 import { Id } from "@silevis/reactgrid";
 import { FileImportModal } from "./components/FileImportModal";
 import { FileExportModal } from "./components/FileExportModal";
+import { RenameModal } from "./components/RenameModal";
 //import 'bulma/css/bulma.min.css';
 
 export const serverAddress = "http://127.0.0.1:8000";
@@ -23,7 +24,9 @@ function App() {
   var [isStatModalOpen, setStatModalOpen] = React.useState<boolean>(false);
   var [isFileImportModalOpen, setFileImportModalOpen] = React.useState<boolean>(false);
   var [isFileExportModalOpen, setFileExportModalOpen] = React.useState<boolean>(false);
+  var [isRenameModalOpen, setRenameModalOpen] = React.useState<boolean>(false);
   var [csvOutput, setCsvOutput] = React.useState<string>("");
+  var [variableToRenameId, setVariableToRenameId] = React.useState<number>(-1);
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps, _caseIds: string[]=caseIds) =>
   {
@@ -54,7 +57,9 @@ function App() {
                 rows={rows}
                 setRows={setRows}
                 updateSpreadsheet={updateSpreadsheet}
-                setStatModalOpen={setStatModalOpen}/>
+                setStatModalOpen={setStatModalOpen}
+                setRenameModalOpen={setRenameModalOpen}
+                setVariableToRenameId={setVariableToRenameId}/>
     <CalculateStatisticsModals variables={variables} 
                               selectedColIds={selectedColIds}
                               isStatModalOpen={isStatModalOpen}
@@ -68,6 +73,11 @@ function App() {
                       variables={variables}
                       timestamps={timestamps}
                       caseIds={caseIds}/>
+    <RenameModal isRenameModalOpen={isRenameModalOpen}
+                  setRenameModalOpen={setRenameModalOpen}
+                  variables={variables}
+                  variableId={variableToRenameId}
+                  updateSpreadsheet={updateSpreadsheet}/>
     <Notifications/>
   </div>
   }; 
