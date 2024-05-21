@@ -81,6 +81,8 @@ interface SpreadsheetProps {
     setRows: React.Dispatch<React.SetStateAction<Row[]>>;
     updateSpreadsheet: (updatedVariables: Variable[]) => void;
     setStatModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setRenameModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setVariableToRenameId: React.Dispatch<React.SetStateAction<number>>;
 }
 
 
@@ -100,7 +102,9 @@ export function Spreadsheet({
     rows,
     setRows,
     updateSpreadsheet,
-    setStatModalOpen
+    setStatModalOpen,
+    setRenameModalOpen,
+    setVariableToRenameId
 }: SpreadsheetProps) {
     const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
         var colNames: string[] = columnIds.map((col) => (col as string))
@@ -135,7 +139,22 @@ export function Spreadsheet({
         {
           if (selectedColIds.includes("id") || selectedColIds.includes("timestamp") || selectedColIds.includes("case_id"))
             return menuOptions;
-    
+  
+          if (selectedColIds.length === 1)
+            menuOptions.push({
+              id: "rename",
+              label: "Rename",
+              handler: () => {
+                 for (let i = 0; i < variables.length; i++)
+                  if (getColNameFromVarName(variables[i].name) === selectedColIds[0])
+                  {
+                    setVariableToRenameId(i);
+                    break;
+                  }
+                 setRenameModalOpen(true);      
+              }
+            });
+            
           menuOptions.push({
             id: "removeVariable",
             label: "Remove",
