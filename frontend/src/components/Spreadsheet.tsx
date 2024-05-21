@@ -83,6 +83,9 @@ interface SpreadsheetProps {
     setStatModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setRenameModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setVariableToRenameId: React.Dispatch<React.SetStateAction<number>>;
+    serverAddress: string;
+    setMissingValuesModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setMissingVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
 }
 
 
@@ -104,7 +107,10 @@ export function Spreadsheet({
     updateSpreadsheet,
     setStatModalOpen,
     setRenameModalOpen,
-    setVariableToRenameId
+    setVariableToRenameId,
+    serverAddress,
+    setMissingValuesModalOpen,
+    setMissingVariableIds
 }: SpreadsheetProps) {
     const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
         var colNames: string[] = columnIds.map((col) => (col as string))
@@ -199,11 +205,14 @@ export function Spreadsheet({
           if (variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)) && v.type === VariableType.CATEGORICAL).length === 0)
           {
     
-            /*menuOptions.push({
+            menuOptions.push({
               id: "fillMissingValues",
               label: "Fill missing values",
               handler: () => {
-                
+                const variableIds: number[] = [];
+                variables.forEach((v, idx) => {if (selectedColIds.includes(getColNameFromVarName(v.name))) variableIds.push(idx)});
+                setMissingVariableIds(variableIds);
+                setMissingValuesModalOpen(true);
               }
             });
     
@@ -211,9 +220,29 @@ export function Spreadsheet({
               id: "removeOutliers",
               label: "Remove outlier values",
               handler: () => {
+                const _variables = variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)));
+                const results: any[] = new Array(_variables.length);
+                const promises: any[] = new Array(_variables.length);
+                _variables.forEach((v, idx) =>
+                {
+                  const data = new URLSearchParams();
+                  v.values.forEach(v2 => data.append('data[]', String(v2 === undefined ? null : v2)))
+                  const requestOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: data.toString()
+                  };
+                  promises[idx] = fetch(serverAddress+"/api/replace_outliers/", requestOptions)
+                  .then(response => response.json())
+                  .then(response => results[idx] = {var: v, data: response})
+                });
                 
+                Promise.all(promises).then(r => {
+                  results.forEach(r => r.var.values = r.data.data.map((v: string) => v  === "nan" ? undefined : v));
+                  updateSpreadsheet(variables);
+                });
               }
-            });*/
+            });
           }
         }
         return menuOptions;

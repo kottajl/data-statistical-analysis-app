@@ -62,7 +62,7 @@ export function FileImportModal({isFileImportModalOpen, setFileImportModalOpen, 
                 _variables.push({name: csvHeader[i], type: VariableType.CATEGORICAL, values: []});
                 isNumber.push(true);
               }
-              console.log(_variables);
+              //console.log(_variables);
               
               const csvRows = csvOutput.slice(csvOutput.indexOf("\n") + 1).split("\n");
               var _variableValuesLength = csvRows.length;

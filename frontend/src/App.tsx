@@ -9,6 +9,7 @@ import { Id } from "@silevis/reactgrid";
 import { FileImportModal } from "./components/FileImportModal";
 import { FileExportModal } from "./components/FileExportModal";
 import { RenameModal } from "./components/RenameModal";
+import { MissingValuesModal } from "./components/MissingValuesModal";
 //import 'bulma/css/bulma.min.css';
 
 export const serverAddress = "http://127.0.0.1:8000";
@@ -27,6 +28,8 @@ function App() {
   var [isRenameModalOpen, setRenameModalOpen] = React.useState<boolean>(false);
   var [csvOutput, setCsvOutput] = React.useState<string>("");
   var [variableToRenameId, setVariableToRenameId] = React.useState<number>(-1);
+  var [isMissingValuesModalOpen, setMissingValuesModalOpen] = React.useState<boolean>(false);
+  var [missingVariableIds, setMissingVariableIds] = React.useState<number[]>([]);
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps, _caseIds: string[]=caseIds) =>
   {
@@ -59,7 +62,11 @@ function App() {
                 updateSpreadsheet={updateSpreadsheet}
                 setStatModalOpen={setStatModalOpen}
                 setRenameModalOpen={setRenameModalOpen}
-                setVariableToRenameId={setVariableToRenameId}/>
+                setVariableToRenameId={setVariableToRenameId}
+                serverAddress={serverAddress}
+                setMissingValuesModalOpen={setMissingValuesModalOpen}
+                setMissingVariableIds={setMissingVariableIds}
+                />
     <CalculateStatisticsModals variables={variables} 
                               selectedColIds={selectedColIds}
                               isStatModalOpen={isStatModalOpen}
@@ -78,6 +85,13 @@ function App() {
                   variables={variables}
                   variableId={variableToRenameId}
                   updateSpreadsheet={updateSpreadsheet}/>
+    <MissingValuesModal isMissingValuesModalOpen={isMissingValuesModalOpen}
+                        setMissingValuesModalOpen={setMissingValuesModalOpen}
+                        variables={variables}
+                        variableIds={missingVariableIds}
+                        updateSpreadsheet={updateSpreadsheet}
+                        serverAddress={serverAddress}
+    />
     <Notifications/>
   </div>
   }; 
