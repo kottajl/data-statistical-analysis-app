@@ -52,21 +52,33 @@ def data_export(request):
 def fill_missing_values(request):
     if request.method == "POST":
         try:
-            if "data[]" in request.data and "method" in request.data and "outliers" in request.data:
-                string_data, method, outliers = request.data.getlist("data[]"), request.data["method"], request.data["outliers"]
+            if "data[]" in request.data and "method" in request.data:
+                string_data, method = request.data.getlist("data[]"), request.data["method"]
                 if method == "constant" and "constant" not in request.data:
                     raise Exception("Invalid data")
                 variable = "Variable"
                 df = pd.DataFrame([convert_data(value) for value in string_data], columns=[variable])
-                if outliers:
-                    replace_outliers_to_nan(df, variable)
                 complete_missing_values(df, variable, method, request.data.get("constant"))
-
                 return Response(data=dict(data=df[variable].to_list()), status=status.HTTP_200_OK)
             raise Exception("Invalid data")
         except Exception as e:
             return Response(data=dict(detail=str(e)), status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(["POST"])
+def replace_outliers(request):
+    if request.method == "POST":
+        try:
+            if "data[]" in request.data:
+                string_data = request.data.getlist("data[]")
+                variable = "Variable"
+                df = pd.DataFrame([convert_data(value) for value in string_data], columns=[variable])
+                replace_outliers_to_nan(df, variable)
+
+                return Response(data=dict(data=[str(value) for value in df[variable].to_list()]), status=status.HTTP_200_OK)
+            raise Exception("Invalid data")
+        except Exception as e:
+            return Response(data=dict(detail=str(e)), status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])

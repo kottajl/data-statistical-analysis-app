@@ -6,5 +6,6 @@ urlpatterns = [
     path('import/', views.data_import),
     path('export/', views.data_export),
     path('missing_values/', views.fill_missing_values),
+    path('replace_outliers/', views.replace_outliers),
     path('1d_stats/', views.stats_1d),
 ]
