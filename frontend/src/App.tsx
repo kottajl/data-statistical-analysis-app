@@ -9,6 +9,7 @@ import { Id } from "@silevis/reactgrid";
 import { FileImportModal } from "./components/FileImportModal";
 import { FileExportModal } from "./components/FileExportModal";
 import { RenameModal } from "./components/RenameModal";
+import { GraphModal } from "./components/GraphModal";
 import { MissingValuesModal } from "./components/MissingValuesModal";
 //import 'bulma/css/bulma.min.css';
 
@@ -30,6 +31,8 @@ function App() {
   var [variableToRenameId, setVariableToRenameId] = React.useState<number>(-1);
   var [isMissingValuesModalOpen, setMissingValuesModalOpen] = React.useState<boolean>(false);
   var [missingVariableIds, setMissingVariableIds] = React.useState<number[]>([]);
+  var [isGraphModalOpen, setGraphModalOpen] = React.useState<boolean>(false);
+  var [graphVariableIds, setGraphVariableIds] = React.useState<number[]>([]);
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps, _caseIds: string[]=caseIds) =>
   {
@@ -66,6 +69,8 @@ function App() {
                 serverAddress={serverAddress}
                 setMissingValuesModalOpen={setMissingValuesModalOpen}
                 setMissingVariableIds={setMissingVariableIds}
+                setGraphModalOpen = {setGraphModalOpen}
+                setGraphVariableIds = {setGraphVariableIds}
                 />
     <CalculateStatisticsModals variables={variables} 
                               selectedColIds={selectedColIds}
@@ -91,6 +96,12 @@ function App() {
                         variableIds={missingVariableIds}
                         updateSpreadsheet={updateSpreadsheet}
                         serverAddress={serverAddress}
+    />
+    <GraphModal isGraphModalOpen = {isGraphModalOpen}
+                setGraphModalOpen = {setGraphModalOpen}
+                serverAddress = {serverAddress}
+                variableIds={graphVariableIds}
+                variables={variables}
     />
     <Notifications/>
   </div>

@@ -86,6 +86,8 @@ interface SpreadsheetProps {
     serverAddress: string;
     setMissingValuesModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setMissingVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
+    setGraphModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setGraphVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
 }
 
 
@@ -110,7 +112,9 @@ export function Spreadsheet({
     setVariableToRenameId,
     serverAddress,
     setMissingValuesModalOpen,
-    setMissingVariableIds
+    setMissingVariableIds,
+    setGraphModalOpen,
+    setGraphVariableIds
 }: SpreadsheetProps) {
     const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
         var colNames: string[] = columnIds.map((col) => (col as string))
@@ -198,6 +202,17 @@ export function Spreadsheet({
             handler: () => {
               setSelectedColIds(selectedColIds);
               setStatModalOpen(true);           
+            }
+          });
+
+          menuOptions.push({
+            id: "showPlot",
+            label: "Show plot",
+            handler: () => {
+              const variableIds: number[] = [];
+              variables.forEach((v, idx) => {if (selectedColIds.includes(getColNameFromVarName(v.name))) variableIds.push(idx)});
+              setGraphVariableIds(variableIds);
+              setGraphModalOpen(true);      
             }
           });
     
