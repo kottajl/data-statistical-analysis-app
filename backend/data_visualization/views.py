@@ -19,7 +19,6 @@ def create_plot(request):
                 for i in range(len(string_data)):
                     string_data[i] = string_data[i].split(",")
                 data_types, variable_names = request.data.getlist("data_types[]"), request.data.getlist("variable_names[]")
-                print(data_types)
                 plot_type, ID_type = request.data["plot_type"], request.data.get("ID_type")
                 plot_data = [[convert_data(value) for value in data_series] if type == "numerical" else data_series for
                              type, data_series in zip(data_types, string_data)]
