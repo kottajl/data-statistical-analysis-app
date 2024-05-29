@@ -8,13 +8,12 @@ interface FileExportModalProps {
     setFileExportModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     variables: Variable[];
     timestamps: string[];
-    caseIds: string[];
 }
 
-export function FileExportModal({isFileExportModalOpen, setFileExportModalOpen, variables, timestamps, caseIds} : FileExportModalProps) {
+export function FileExportModal({isFileExportModalOpen, setFileExportModalOpen, variables, timestamps} : FileExportModalProps) {
     const [selectedSeparator, setSelectedSeparator] = React.useState(';');
     const [selectedDecimalSeparator, setSelectedDecimalSeparator] = React.useState(',');
-    const [selectedCaseIds, setSelectedCaseIds] = React.useState<string[]>([]);
+    const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
     const [selectedVariables, setSelectedVariables] = React.useState<string[]>([]);
     return  <PureModal
             header="CSV Export"
@@ -43,14 +42,14 @@ export function FileExportModal({isFileExportModalOpen, setFileExportModalOpen, 
             <option value=".">.</option>
         </select>
         <br></br>
-        Select case IDs to export
-        <select style={{height: 300}} value={selectedCaseIds} multiple onChange={event => 
+        Select IDs to export
+        <select style={{height: 300}} value={selectedIds} multiple onChange={event => 
         {
             const selectedValues = Array.from(event.target.selectedOptions, option => option.value);
-            setSelectedCaseIds(selectedValues);} 
+            setSelectedIds(selectedValues);} 
         }>
-            {Array.from(new Set(caseIds)).map(caseId => (
-                <option value={caseId}>Case {caseId}</option>
+            {!variables[0] ? "" : variables[0].values.map((_, i) => (
+                <option value={i}>{i+1}</option>
             ))}
         </select>
         Select variables to export
@@ -63,8 +62,8 @@ export function FileExportModal({isFileExportModalOpen, setFileExportModalOpen, 
                 <option value={v.name}>{v.name}</option>
             ))}
         </select>
-        <input style={{margin: 5}} type="button" value="Export" onClick={(e) => {
-            if (variables.length === 0 || caseIds.length === 0 || timestamps.length === 0)
+        <input style={{margin: 5}} type="button" className="bu-button bu-is-light bu-is-normal" value="Export" onClick={(e) => {
+            if (variables.length === 0 || selectedIds.length === 0 || timestamps.length === 0)
             {
                 showWarning("No data to export!");
                 return;
@@ -74,21 +73,16 @@ export function FileExportModal({isFileExportModalOpen, setFileExportModalOpen, 
                 showWarning("Separator can't be the same as decimal separator!");
                 return;
             }
-            const indexesToRemove: number[] = []
-            caseIds.forEach((c, idx) => {
-                if (!selectedCaseIds.includes(c))
-                    indexesToRemove.push(idx);
-            });
-            const _timestamps = timestamps.filter((_, index) => !indexesToRemove.includes(index));
-            const _caseIds = caseIds.filter((_, index) => !indexesToRemove.includes(index));
+            
+            const _timestamps = timestamps.filter((_, index) => selectedIds.includes(String(index)));
             var _variables = variables.map(variable => {
                 let updatedValues;
                 if (variable.type === VariableType.CATEGORICAL) {
                     updatedValues = (variable.values as (string | undefined)[])
-                        .filter((_, index) => !indexesToRemove.includes(index));
+                        .filter((_, index) => selectedIds.includes(String(index)));
                 } else {
                     updatedValues = (variable.values as (number | undefined)[])
-                        .filter((_, index) => !indexesToRemove.includes(index));
+                        .filter((_, index) => selectedIds.includes(String(index)));
                 }
                 return new Variable(variable.name, variable.type, updatedValues);
             });
@@ -96,14 +90,25 @@ export function FileExportModal({isFileExportModalOpen, setFileExportModalOpen, 
             _variables = _variables.filter(v => selectedVariables.includes(v.name));
 
             var fileContent = "ID;Timestamp;";
-            _variables.forEach(v => fileContent += v.name + selectedSeparator);
-            fileContent += "Case ID\n";
+            for (let i = 0; i < _variables.length - 1; i++)
+                fileContent += _variables[i].name + selectedSeparator
+            fileContent += _variables[_variables.length - 1].name + "\n"
 
             for (let i = 0; i < _timestamps.length; i++)
             {
                 fileContent += String(i+1) + selectedSeparator + _timestamps[i] + selectedSeparator;
-                _variables.forEach(v => fileContent += v.values[i] === undefined ? selectedSeparator : v.type === VariableType.CATEGORICAL ? v.values[i] + selectedSeparator : String(v.values[i]).replaceAll(".", selectedDecimalSeparator) + selectedSeparator);
-                fileContent += _caseIds[i] + "\n";
+                for (let j = 0; j < _variables.length; j++)
+                {
+                    let v = _variables[j]
+                    if (v.values[i] !== undefined)
+                        if (v.type === VariableType.CATEGORICAL)
+                            fileContent += v.values[i]
+                        else
+                            fileContent += String(v.values[i]).replaceAll(".", selectedDecimalSeparator)
+                    if (j != _variables.length - 1)
+                        fileContent += selectedSeparator
+                }
+                fileContent += "\n"
             }
 
             const blob = new Blob([fileContent], { type: 'text/plain' });

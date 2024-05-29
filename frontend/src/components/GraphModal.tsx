@@ -15,6 +15,17 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
     const [imageSrc, setImageSrc] = React.useState('');
     const [selectedType, setSelectedType] = React.useState('linear');
     var [isGraphModalOpen2, setGraphModalOpen2] = React.useState<boolean>(false);
+
+    const downloadPlot = () => {
+        const link = document.createElement('a');
+        if (link instanceof HTMLAnchorElement) {
+        link.href = imageSrc;
+        link.download = 'plot.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        }
+      };
       
   return  <div><PureModal
             header="Plot"
@@ -28,7 +39,7 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
             }}
         >
         <div>
-            Plot type
+            <p>Plot type</p>
             <select value = {selectedType} onChange={e => setSelectedType(e.target.value)}>
                 <option value="linear">Linear plot</option>
                 <option value="scatter">Scatter plot</option>
@@ -37,7 +48,7 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
                 <option value="bar">Bar chart</option>
                 <option value="pie_chart">Pie chart</option>
             </select>
-            <input style={{margin: 5}} type="button" value="Show" onClick={(e) => {
+            <p><input style={{margin: 5}} type="button" className="bu-button bu-is-light bu-is-normal" value="Show" onClick={(e) => {
             const data = new URLSearchParams();
             const idsToRemove: number[] = []
             variableIds.forEach(i => {
@@ -75,7 +86,7 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
                         .then(blob => setImageSrc(URL.createObjectURL(blob)));
             setGraphModalOpen(false);
             setGraphModalOpen2(true);
-        }}></input>
+        }}></input></p>
         </div>
         </PureModal>
         <PureModal
@@ -91,7 +102,8 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
             return true;
         }}
     >
-    <div style = {{overflow:"auto", whiteSpace: "nowrap"}}>
+    <div style = {{overflow:"auto", whiteSpace: "nowrap", display: 'flex', flexDirection: 'column', justifyContent: 'flex-center'}}>
+        {imageSrc ? <button className="bu-button bu-is-light bu-is-normal" onClick={downloadPlot} style = {{width: 150}}>Save plot</button>: ""}
         {imageSrc ? <img src={imageSrc} /> : <p>Loading image...</p>}
     </div>
     </PureModal>

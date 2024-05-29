@@ -11,7 +11,8 @@ import { FileExportModal } from "./components/FileExportModal";
 import { RenameModal } from "./components/RenameModal";
 import { GraphModal } from "./components/GraphModal";
 import { MissingValuesModal } from "./components/MissingValuesModal";
-//import 'bulma/css/bulma.min.css';
+import './bu-bulma.css';
+import './App.css';
 
 export const serverAddress = "http://127.0.0.1:8000";
 
@@ -19,7 +20,6 @@ function App() {
   var [variables, setVariables] = React.useState<Variable[]>([]);
   var [variableValuesLength, setvariableValuesLength] = React.useState<number>(0);
   var [timestamps, setTimestamps] = React.useState<string[]>([]);
-  var [caseIds, setCaseIds] = React.useState<string[]>([]);
   var [selectedColIds, setSelectedColIds] = React.useState<Id[]>([]);
   var [columns, setColumns] = React.useState<Column[]>([]);
   var [rows, setRows] = React.useState<Row[]>([]);
@@ -34,28 +34,26 @@ function App() {
   var [isGraphModalOpen, setGraphModalOpen] = React.useState<boolean>(false);
   var [graphVariableIds, setGraphVariableIds] = React.useState<number[]>([]);
 
-  const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps, _caseIds: string[]=caseIds) =>
+  const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps) =>
   {
       setVariables(_variables);
       setvariableValuesLength(_variableValuesLength);
       setTimestamps(_timestamps);
-      setCaseIds(_caseIds);
       setColumns(getColumns(_variables));
-      setRows(getRows(_variables, _variableValuesLength, _timestamps, _caseIds));
+      setRows(getRows(_variables, _variableValuesLength, _timestamps));
   }
 
   return <div style={{paddingRight: 10, paddingLeft: 10, paddingTop:5}}>
     <TopMenu setCsvOutput={setCsvOutput}
               setFileImportModalOpen = {setFileImportModalOpen}
               setFileExportModalOpen = {setFileExportModalOpen}/>
-    <Spreadsheet variables={variables}
+    <Spreadsheet
+                variables={variables}
                 setVariables={setVariables}
                 variableValuesLength={variableValuesLength}
                 setvariableValuesLength={setvariableValuesLength}
                 timestamps={timestamps}
                 setTimestamps={setTimestamps}
-                caseIds={caseIds}
-                setCaseIds={setCaseIds}
                 selectedColIds={selectedColIds}
                 setSelectedColIds={setSelectedColIds}
                 columns={columns}
@@ -83,8 +81,7 @@ function App() {
     <FileExportModal isFileExportModalOpen={isFileExportModalOpen} 
                       setFileExportModalOpen={setFileExportModalOpen}
                       variables={variables}
-                      timestamps={timestamps}
-                      caseIds={caseIds}/>
+                      timestamps={timestamps}/>
     <RenameModal isRenameModalOpen={isRenameModalOpen}
                   setRenameModalOpen={setRenameModalOpen}
                   variables={variables}

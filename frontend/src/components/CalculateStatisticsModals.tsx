@@ -53,7 +53,7 @@ export function CalculateStatisticsModals({variables, selectedColIds, isStatModa
       <label style={{margin: 5}}><input type="checkbox" checked={selKurtosis} onChange={() => setSelKurtosis(!selKurtosis)}/> Kurtosis</label>
       <label style={{margin: 5}}><input type="checkbox" checked={selPercentile} onChange={() => setSelPercentile(!selPercentile)}/> Percentile</label>
       <label style={{margin: 5}}><input type="checkbox" checked={selMissing} onChange={() => setSelMissing(!selMissing)}/> Missing</label>
-      <input style={{margin: 5}} type="button" value="Calculate" onClick={(e) => {
+      <input style={{margin: 5}} type="button" className="bu-button bu-is-light bu-is-normal" value="Calculate" onClick={(e) => {
         const _variables = variables.filter((v) => selectedColIds.includes(getColNameFromVarName(v.name)))
         const results: any[] = new Array(_variables.length);
         const promises: any[] = new Array(_variables.length);

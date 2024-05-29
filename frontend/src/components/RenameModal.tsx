@@ -26,7 +26,7 @@ export function RenameModal({isRenameModalOpen, setRenameModalOpen, variables, v
         >
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-start'}}>
                 New name:  <input value = {selectedName} onChange={e => setSelectedName(e.target.value)} />
-                <input style={{margin: 5}} type="button" value="Rename" onClick={(e) => {
+                <input style={{margin: 5}} type="button" className="bu-button bu-is-light bu-is-normal" value="Rename" onClick={(e) => {
                     variables[variableId].name = selectedName;
                     updateSpreadsheet(variables);
                     setRenameModalOpen(false);

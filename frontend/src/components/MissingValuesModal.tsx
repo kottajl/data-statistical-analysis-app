@@ -39,7 +39,7 @@ export function MissingValuesModal({isMissingValuesModalOpen, setMissingValuesMo
                 <div style={{display: selectedStrategy === "constant" ? "block": "none"}}>Value</div>
                 <input style={{display: selectedStrategy === "constant" ? "block": "none"}} type="number" value = {selectedConstant} onChange={e => setSelectedConstant(Number(e.target.value))}/>
                 <br style={{display: selectedStrategy === "constant" ? "block": "none"}}></br> 
-                <input style={{margin: 5}} type="button" value="Fill" onClick={(e) => {   
+                <input style={{margin: 5}} type="button" className="bu-button bu-is-light bu-is-normal" value="Fill" onClick={(e) => {   
                     const _variables = variables.filter((v, idx) => variableIds.includes(idx));
                     const results: any[] = new Array(_variables.length);
                     const promises: any[] = new Array(_variables.length);

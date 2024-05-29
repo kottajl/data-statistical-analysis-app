@@ -31,24 +31,17 @@ export const getColumns = (variables: Variable[]): Column[] => [
     resizable: true,
     reorderable: true
 })),
-{
-    columnId: "case_id",
-    width:75,
-    resizable: true,
-    reorderable: false
-},
 ];
 
-export const getRows = (variables: Variable[], numValues: number, timestamps: string[], caseIds: string[]): Row[] => [
+export const getRows = (variables: Variable[], numValues: number, timestamps: string[]): Row[] => [
 {
-    rowId: "header",
+    rowId: "text",
     cells: [
     { type: "header", text: "ID"},
     { type: "header", text: "Time stamp"},
     ...variables.map<DefaultCellTypes>(
-        (variable) => ({ type: "header", text: variable.name + " (" + variable.type + ")"})
+        (variable) => ({ type: "text", text: variable.name + " (" + variable.type + ")", renderer: (text: string) => <div style={{fontWeight: 'bold'}}>{text}</div>})
     ),
-    { type: "header", text: "Case ID"}
     ]
 },
 ...Array.from(Array(numValues).keys()).map<Row>((idx) => ({
@@ -59,7 +52,6 @@ export const getRows = (variables: Variable[], numValues: number, timestamps: st
     ...variables.map<DefaultCellTypes>(
         (variable) => ({ type: "text", text: variable.values[idx] === undefined ? "" : String(variable.values[idx])})
     ),
-    { type: "header", text: caseIds[idx]},
     ]
 }))
 ];
@@ -71,8 +63,6 @@ interface SpreadsheetProps {
     setvariableValuesLength: React.Dispatch<React.SetStateAction<number>>;
     timestamps: string[];
     setTimestamps: React.Dispatch<React.SetStateAction<string[]>>;
-    caseIds: string[];
-    setCaseIds: React.Dispatch<React.SetStateAction<string[]>>;
     selectedColIds: Id[];
     setSelectedColIds: React.Dispatch<React.SetStateAction<Id[]>>;
     columns: Column[];
@@ -98,8 +88,6 @@ export function Spreadsheet({
     setvariableValuesLength,
     timestamps,
     setTimestamps,
-    caseIds,
-    setCaseIds,
     selectedColIds,
     setSelectedColIds,
     columns,
@@ -118,7 +106,7 @@ export function Spreadsheet({
 }: SpreadsheetProps) {
     const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
         var colNames: string[] = columnIds.map((col) => (col as string))
-        if (targetColumnId === "id" || targetColumnId === "timestamp" || targetColumnId === "case_id")
+        if (targetColumnId === "id" || targetColumnId === "timestamp")
             return;
     
         updateSpreadsheet(reorderArray(variables, 
@@ -147,7 +135,7 @@ export function Spreadsheet({
         const menuOptions: MenuOption[] = []
         if (selectionMode === "column")
         {
-          if (selectedColIds.includes("id") || selectedColIds.includes("timestamp") || selectedColIds.includes("case_id"))
+          if (selectedColIds.includes("id") || selectedColIds.includes("timestamp"))
             return menuOptions;
   
           if (selectedColIds.length === 1)
@@ -296,16 +284,17 @@ export function Spreadsheet({
         }); 
       }; 
 
-  return <ReactGrid
-    rows={rows} 
-    columns={columns} 
-    onColumnResized={handleColumnResize} 
-    onColumnsReordered={handleColumnsReorder} 
-    onCellsChanged={handleChanges}
-    onContextMenu={handleContextMenu}
-    enableColumnSelection 
-    stickyTopRows={1} 
-    stickyLeftColumns={1}
-    />
-
+  return variables.length !== 0 ? <div className="bu-box" style={{backgroundColor: "white", width: "auto", display: "inline-block", padding: 3, marginBottom: 5}}>
+      <ReactGrid
+      rows={rows} 
+      columns={columns} 
+      onColumnResized={handleColumnResize} 
+      onColumnsReordered={handleColumnsReorder} 
+      onCellsChanged={handleChanges}
+      onContextMenu={handleContextMenu}
+      enableColumnSelection 
+      stickyTopRows={1} 
+      stickyLeftColumns={1}
+      />
+    </div> : <div></div>
 }

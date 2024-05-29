@@ -35,8 +35,8 @@ export function TopMenu({setCsvOutput, setFileImportModalOpen, setFileExportModa
     event.target.value = ''
   }
 
-  return <div className="box" style={{padding: 3, marginBottom: 5}}>
-    <Menu menuButton={<MenuButton className="button is-light is-normal">File</MenuButton>} menuClassName="fileMenu">
+  return <div className="bu-box" style={{padding: 3, marginBottom: 5}}>
+    <Menu menuButton={<MenuButton className="bu-button bu-is-light bu-is-normal">File</MenuButton>} menuClassName="fileMenu">
         <MenuItem onClick={handleImportClick}>Import</MenuItem>
         <MenuItem onClick={e => {setFileExportModalOpen(true)}}>Export</MenuItem>
     </Menu>
