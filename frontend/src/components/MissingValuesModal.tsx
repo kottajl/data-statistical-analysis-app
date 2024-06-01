@@ -43,23 +43,48 @@ export function MissingValuesModal({isMissingValuesModalOpen, setMissingValuesMo
                     const _variables = variables.filter((v, idx) => variableIds.includes(idx));
                     const results: any[] = new Array(_variables.length);
                     const promises: any[] = new Array(_variables.length);
-                    _variables.forEach((v, idx) =>
-                    {
+                    _variables.forEach((v, idx) => {
                       const data = new URLSearchParams();
-                      v.values.forEach(v2 => data.append('data[]', String(v2 === undefined ? null : v2)))
+                      v.values.forEach(v2 => data.append('data[]', String(v2 === undefined ? null : v2)));
                       data.append('method', selectedStrategy);
-                      //console.log(selectedStrategy);
-                      if (selectedStrategy === "constant")
+                      
+                      if (selectedStrategy === "constant") {
                         data.append('constant', String(selectedConstant));
+                      }
+                    
                       const requestOptions = {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: data.toString()
                       };
-                      promises[idx] = fetch(serverAddress+"/api/missing_values/", requestOptions)
-                      .then(response => response.json())
-                      .then(response => results[idx] = {var: v, data: response})
+                    
+                      promises[idx] = fetch(serverAddress + "/api/missing_values/", requestOptions)
+                        .then(response => {
+                          if (!response.ok) {
+                            throw new Error(`Server responded with status ${response.status}`);
+                          }
+                          return response.json();
+                        })
+                        .then(response => {
+                          results[idx] = { var: v, data: response };
+                        })
+                        .catch(error => {
+                          showWarning(`Error processing variable ${v.name}: ${error.message}`);
+                          // Fallback to undefined values if there's an error
+                          results[idx] = { var: v, data: { data: v.values.map(() => undefined) } };
+                        });
                     });
+                    
+                    Promise.all(promises)
+                      .then(() => {
+                        results.forEach(r => {
+                          r.var.values = r.data.data.map((v: string) => v === "nan" ? undefined : v);
+                        });
+                        updateSpreadsheet(variables);
+                      })
+                      .catch(error => {
+                        showWarning(`An error occurred while processing the data: ${error.message}`);
+                      });
 
                     Promise.all(promises).then(r => {
                         //console.log(results);

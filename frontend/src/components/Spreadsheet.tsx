@@ -226,26 +226,45 @@ export function Spreadsheet({
                 const _variables = variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)));
                 const results: any[] = new Array(_variables.length);
                 const promises: any[] = new Array(_variables.length);
-                _variables.forEach((v, idx) =>
-                {
+              
+                _variables.forEach((v, idx) => {
                   const data = new URLSearchParams();
-                  v.values.forEach(v2 => data.append('data[]', String(v2 === undefined ? null : v2)))
+                  v.values.forEach(v2 => data.append('data[]', String(v2 === undefined ? null : v2)));
                   const requestOptions = {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: data.toString()
                   };
-                  promises[idx] = fetch(serverAddress+"/api/replace_outliers/", requestOptions)
-                  .then(response => response.json())
-                  .then(response => results[idx] = {var: v, data: response})
+              
+                  promises[idx] = fetch(serverAddress + "/api/replace_outliers/", requestOptions)
+                    .then(response => {
+                      if (!response.ok) {
+                        throw new Error(`Server responded with status ${response.status}`);
+                      }
+                      return response.json();
+                    })
+                    .then(response => {
+                      results[idx] = { var: v, data: response };
+                    })
+                    .catch(error => {
+                      showWarning(`Error processing variable ${v.name}: ${error.message}`);
+                      results[idx] = { var: v, data: { data: v.values.map(() => undefined) } }; // Fallback to undefined
+                    });
                 });
-                
-                Promise.all(promises).then(r => {
-                  results.forEach(r => r.var.values = r.data.data.map((v: string) => v  === "nan" ? undefined : v));
-                  updateSpreadsheet(variables);
-                });
+              
+                Promise.all(promises)
+                  .then(() => {
+                    results.forEach(r => {
+                      r.var.values = r.data.data.map((v: string) => v === "nan" ? undefined : v);
+                    });
+                    updateSpreadsheet(variables);
+                  })
+                  .catch(error => {
+                    showWarning(`An error occurred while processing the data: ${error.message}`);
+                  });
               }
-            });
+            }
+          );
           }
         }
         return menuOptions;
