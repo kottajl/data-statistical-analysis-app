@@ -118,11 +118,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-FILES_URL = os.path.join(BASE_DIR, 'files')
-
-if not os.path.exists(FILES_URL):
-    os.makedirs(FILES_URL)
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 

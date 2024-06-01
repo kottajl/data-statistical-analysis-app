@@ -62,60 +62,57 @@ def plot_linear(df: pd.DataFrame):
 
 
 def plot_histogram(df: pd.DataFrame):
-    plot = plt.figure(figsize=(12, 8))
+    columns_number = len(df.columns) if "ID" not in df.columns else len(df.columns) - 1
+    fig, axs = plt.subplots(columns_number, figsize=(10, 5 * columns_number))
     plt.subplots_adjust(right=0.75)
-    columns = [col for col in df.columns if col != 'ID']
-    plt.hist([df[column] for column in columns], 30, label=columns)
-    plt.title("Histogram")
-    plt.xlabel("Wartości")
-    plt.ylabel("Częstości")
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.75))
-    plt.grid(True)
-    return get_plot_file(plot)
+    for i, column in enumerate([value for value in df.columns if value != "ID"]):
+        if columns_number == 1:
+            ax = axs
+        else:
+            ax = axs[i]
+        ax.hist(df[column], 30, label=column, edgecolor='black')
+        ax.set_xlabel("Values")
+        ax.set_ylabel("Frequencies")
+        ax.set_title(f"{column}")
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.75))
+        ax.grid(axis="y")
+    fig.tight_layout(pad=7.0)
+    return get_plot_file(fig)
 
 
 def plot_bar(df: pd.DataFrame):
-    if "ID" not in df.columns:
-        raise ValueError("ID not sent.")
-    plot = plt.figure(figsize=(14, 8))
+    columns_number = len(df.columns) if "ID" not in df.columns else len(df.columns) - 1
+    fig, axs = plt.subplots(columns_number, figsize=(10, 6 * columns_number))
     plt.subplots_adjust(right=0.75)
-    n_bars = len(df.columns) - 1
-    bar_width = 0.8 / n_bars
-    single_width = 1
-    colors = distinctipy.get_colors(n_bars)
-
-    X_values = df["ID"] if df["ID"].dtypes != "object" else np.arange(len(df["ID"]))
     for i, column in enumerate([value for value in df.columns if value != "ID"]):
-        x_offset = (i - n_bars / 2) * bar_width + bar_width / 2
-
-        j = 0
-        for x, y in zip(X_values, df[column]):
-            if j == 0:
-                plt.bar(x + x_offset, y, width=bar_width * single_width, color=colors[i % len(colors)], label=column)
-            else:
-                plt.bar(x + x_offset, y, width=bar_width * single_width, color=colors[i % len(colors)])
-            j += 1
-
-    if df["ID"].dtypes == "object":
-        plt.xticks(X_values, df["ID"])
-    plt.title("Wykres kolumnowy")
-    plt.xlabel("ID")
-    plt.ylabel("Wartości")
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.75))
-    plt.grid(axis="y")
-    return get_plot_file(plot)
+        if columns_number == 1:
+            ax = axs
+        else:
+            ax = axs[i]
+        value_count = df[column].value_counts()
+        ax.bar(value_count.index, value_count, color=distinctipy.get_colors(len(value_count)), label=value_count.index)
+        ax.set_title(f"{column}", pad=20)
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        ax.set_xlabel("Categories")
+        ax.set_ylabel("Values")
+        ax.grid(axis="y")
+    fig.tight_layout(pad=7.0)
+    return get_plot_file(fig)
 
 
 def plot_pie_chart(df: pd.DataFrame):
-    column_len = len(df.columns) - 1
-    fig, axs = plt.subplots(len(df.columns) - 1, figsize=(12, 5 * column_len))
+    columns_number = len(df.columns) if "ID" not in df.columns else len(df.columns) - 1
+    fig, axs = plt.subplots(columns_number, figsize=(12, 6 * columns_number))
     plt.subplots_adjust(right=0.75)
     for i, column in enumerate([value for value in df.columns if value != "ID"]):
-        ax = axs[i]
+        if columns_number == 1:
+            ax = axs
+        else:
+            ax = axs[i]
         value_count = df[column].value_counts()
         ax.pie(value_count, labels=value_count.index, colors=distinctipy.get_colors(len(value_count)),
                autopct='%1.1f%%', startangle=90)
-        ax.set_title(f"Wykres kołowy dla {column}")
+        ax.set_title(f"{column}", pad=20)
         ax.axis("equal")
         ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         ax.grid(True)
@@ -123,14 +120,18 @@ def plot_pie_chart(df: pd.DataFrame):
 
 
 def plot_boxplot(df: pd.DataFrame):
-    plot = plt.figure(figsize=(12, 8))
-    plt.subplots_adjust(right=0.75)
-    columns = [col for col in df.columns if col != 'ID']
-    plt.boxplot([df[column] for column in columns], labels=columns)
-    plt.title("Wykres pudełkowy")
-    plt.ylabel("Wartości")
-    plt.grid(True)
-    return get_plot_file(plot)
+    columns_number = len(df.columns) if "ID" not in df.columns else len(df.columns) - 1
+    fig, axs = plt.subplots(columns_number, figsize=(8, 5 * columns_number))
+    for i, column in enumerate([value for value in df.columns if value != "ID"]):
+        if columns_number == 1:
+            ax = axs
+        else:
+            ax = axs[i]
+        ax.boxplot(df[column], vert=0)
+        ax.set_title(f"{column}", pad=20)
+        ax.grid(axis="x")
+    fig.tight_layout(pad=7.0)
+    return get_plot_file(fig)
 
 
 def get_plot_file(plot):

@@ -43,7 +43,7 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
             <select value = {selectedType} onChange={e => setSelectedType(e.target.value)}>
                 <option value="linear">Linear plot</option>
                 <option value="scatter">Scatter plot</option>
-                {/*<option value="boxplot">Box plot</option>*/}
+                {<option value="boxplot">Box plot</option>}
                 <option value="hist">Histogram</option>
                 <option value="bar">Bar chart</option>
                 <option value="pie_chart">Pie chart</option>
