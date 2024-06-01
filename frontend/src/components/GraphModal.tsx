@@ -79,13 +79,25 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: data.toString()
-            };
-        
-            fetch(serverAddress+"/api/plots/1d/", requestOptions)
-                        .then(response => response.blob())
-                        .then(blob => setImageSrc(URL.createObjectURL(blob)));
-            setGraphModalOpen(false);
-            setGraphModalOpen2(true);
+              };
+              
+              const fetchAndSetImage = async () => {
+                try {
+                  const response = await fetch(serverAddress + "/api/plots/1d/", requestOptions);
+                  if (!response.ok) {
+                    throw new Error(`Server responded with status ${response.status}`);
+                  }
+                  const blob = await response.blob();
+                  setImageSrc(URL.createObjectURL(blob));
+                  setGraphModalOpen(false);
+                  setGraphModalOpen2(true);
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+                  showWarning(`Error fetching the image: ${errorMessage}`);
+                }
+              };
+              
+              fetchAndSetImage();
         }}></input></p>
         </div>
         </PureModal>
