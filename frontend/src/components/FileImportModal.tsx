@@ -2,6 +2,7 @@ import * as React from "react";
 import PureModal from 'react-pure-modal';
 import { showWarning } from "./Notifications";
 import { Variable, VariableType } from "../classes/Variable"
+import { useState } from 'react';
 
 interface FileImportModalProps {
     isFileImportModalOpen: boolean;
@@ -19,6 +20,8 @@ export function FileImportModal({isFileImportModalOpen, setFileImportModalOpen, 
     var [variableValuesLength, setvariableValuesLength] = React.useState<number>(0);
     var [timestamps, setTimestamps] = React.useState<string[]>([]);
     var [caseIds, setCaseIds] = React.useState<string[]>([]);
+    const [rangeFrom, setRangeFrom] = useState('');
+    const [rangeTo, setRangeTo] = useState('');
     return <div>
         <PureModal
             header="CSV Import"
@@ -154,7 +157,7 @@ export function FileImportModal({isFileImportModalOpen, setFileImportModalOpen, 
             ))}
         </select>
         <input 
-    style={{margin: 5}} 
+    style={{margin: 5, marginTop: 20}} 
     type="button" 
     className="bu-button bu-is-light bu-is-normal" 
     value="Select all" 
@@ -165,7 +168,81 @@ export function FileImportModal({isFileImportModalOpen, setFileImportModalOpen, 
       }
     }}
   />
+
+<input 
+  style={{ margin: 5, marginTop: 7 }} 
+  type="button" 
+  className="bu-button bu-is-light bu-is-normal" 
+  value="Deselect all" 
+  onClick={() => {
+    setSelectedIds([]);
+  }}
+/>
+  <div style={{ width : "auto", height : "0.15em", backgroundColor : "#eeeeee", margin : 5}}></div>
+    <div style={{ display: 'flex', alignItems: 'center' , marginTop : 5, marginBottom : 5}}>
+    <input
+      style={{ margin: 5, marginTop : 0, marginBottom : 0 ,width : "50%", height: "2.9em"}}
+      type="number"
+      min={1}
+      onChange={(e) => {
+        setRangeFrom(e.target.value);
+      }}
+    />
+    <input
+      style={{ margin: 5 , marginTop : 0, marginBottom : 0, width : "50%", height: "2.9em"}}
+      type="number"
+      min={1}
+      onChange={(e) => {
+        setRangeTo(e.target.value);
+      }}
+    />
+
+  </div>
+  <input
+  style={{ margin: 5}}
+  type="button"
+  className="bu-button bu-is-light bu-is-normal"
+  value=" Add range "
+  onClick={() => {
+    var from = parseInt(rangeFrom);
+    var to = parseInt(rangeTo);
+    const maxAvailableValue = variables[0] ? variables[0].values.length - 1 : 0; 
+    if (!isNaN(from) && !isNaN(to) && from >= 1 && to - 1 <= maxAvailableValue && from <= to) { 
+        to -=1
+        from -= 1
+      const rangeIds = Array.from(Array(to - from + 1).keys()).map(num => String(num + from));
+      setSelectedIds(prevIds => [...new Set([...prevIds, ...rangeIds])]);
+    } else {
+      showWarning("Please enter valid numbers for the range.");
+    }
+  }}
+/>
+  <input 
+  style={{ margin: 5} }
+  type="button" 
+  className="bu-button bu-is-light bu-is-normal" 
+  value="Remove range" 
+  onClick={() => {
+    var from = parseInt(rangeFrom);
+    var to = parseInt(rangeTo);
+    const maxAvailableValue = variables[0] ? variables[0].values.length - 1 : 0; 
+    if (!isNaN(from) && !isNaN(to)&& from >= 1 && to - 1 <= maxAvailableValue && from <= to) { 
+        to -=1
+        from -= 1
+      const rangeIdsToRemove = Array.from(Array(to - from + 1).keys()).map(num => String(num + from));
+      setSelectedIds(prevIds => prevIds.filter(id => !rangeIdsToRemove.includes(id)));
+    } else {
+      showWarning("Please enter valid numbers for the range.");
+    }
+  }}
+/>
+<div style={{ width : "auto", height : "0.15em", backgroundColor : "#eeeeee", margin : 5}}></div>
         <input style={{margin: 5}} type="button" className="bu-button bu-is-light bu-is-normal" value="Import" onClick={(e) => {
+            if (selectedIds.length == 0)
+                {
+                    showWarning("Can't import empty data.");
+                    return;
+                }
             const _timestamps = timestamps.filter((_, index) => selectedIds.includes(String(index)));
             const _variables = variables.map(variable => {
                 let updatedValues;
