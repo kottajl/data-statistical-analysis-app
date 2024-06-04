@@ -1,8 +1,7 @@
 import io
 
-import numpy as np
-import pandas as pd
 import matplotlib
+import pandas as pd
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -18,14 +17,12 @@ def draw_plot_2d(df: pd.DataFrame, plot_type: str, ID_variable: str = None):
             return plot_linear(df, ID_variable)
         case "heatmap":
             return plot_heatmap(df)
-        case "hist":
-            return plot_histogram(df)
         case "bar":
             return plot_bar(df, ID_variable)
-        case "pie_chart":
-            return plot_pie_chart(df)
         case "boxplot":
-            return plot_boxplot(df)
+            return plot_boxplot(df, ID_variable)
+        case "2Y_axis":
+            return plot_2Y_axis(df, ID_variable)
         case _:
             raise ValueError(f"Unrecognized plot type: {plot_type}")
 
@@ -38,12 +35,13 @@ def plot_scatter(df: pd.DataFrame, ID_variable: str):
     for column in df.columns:
         if column == ID_variable:
             continue
-        plt.scatter(df[ID_variable], df[column], label=column)
+        sns.scatterplot(data=df, x=df[ID_variable], y=df[column], label=column)
     plt.title("Scatter Plot 2d")
     plt.xlabel(ID_variable)
     plt.ylabel("Values")
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.75))
     plt.grid(True)
+    plt.tight_layout(pad=7.0)
     return get_plot_file(plot)
 
 
@@ -55,14 +53,15 @@ def plot_linear(df: pd.DataFrame, ID_variable: str):
     for column in df.columns:
         if column == ID_variable:
             continue
-        data = df.groupby([ID_variable])[column].mean()
-        plt.plot(data.index, data.values, label=column)
+        sns.lineplot(data=df, x=ID_variable, y=column, label=column)
     plt.title("Linear Plot 2d")
     plt.xlabel(ID_variable)
     plt.ylabel("Values")
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.75))
     plt.grid(True)
+    plt.tight_layout(pad=7.0)
     return get_plot_file(plot)
+
 
 def plot_heatmap(df: pd.DataFrame):
     plt.figure(figsize=(10, 9))
@@ -70,25 +69,6 @@ def plot_heatmap(df: pd.DataFrame):
     plot = sns.heatmap(df.corr(), cmap="YlGnBu", annot=True).get_figure()
     plot.tight_layout(pad=15.0)
     return get_plot_file(plot)
-
-
-def plot_histogram(df: pd.DataFrame):
-    columns_number = len(df.columns) if "ID" not in df.columns else len(df.columns) - 1
-    fig, axs = plt.subplots(columns_number, figsize=(10, 5 * columns_number))
-    plt.subplots_adjust(right=0.75)
-    for i, column in enumerate([value for value in df.columns if value != "ID"]):
-        if columns_number == 1:
-            ax = axs
-        else:
-            ax = axs[i]
-        ax.hist(df[column], 30, label=column, edgecolor='black')
-        ax.set_xlabel("Values")
-        ax.set_ylabel("Frequencies")
-        ax.set_title(f"{column}")
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.75))
-        ax.grid(axis="y")
-    fig.tight_layout(pad=7.0)
-    return get_plot_file(fig)
 
 
 def plot_bar(df: pd.DataFrame, ID_variable: str):
@@ -102,10 +82,8 @@ def plot_bar(df: pd.DataFrame, ID_variable: str):
             ax = axs
         else:
             ax = axs[i]
-        data = df.groupby([ID_variable])[column].mean()
-        ax.barh(data.index, data.values, label=column)
-        ax.set_title(f"{column}", pad=20)
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        sns.barplot(data=df, x=ID_variable, y=column, label=column, ax=ax)
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.75))
         ax.set_xlabel("Categories")
         ax.set_ylabel("Values")
         ax.grid(axis="y")
@@ -113,37 +91,38 @@ def plot_bar(df: pd.DataFrame, ID_variable: str):
     return get_plot_file(fig)
 
 
-def plot_pie_chart(df: pd.DataFrame):
-    columns_number = len(df.columns) if "ID" not in df.columns else len(df.columns) - 1
-    fig, axs = plt.subplots(columns_number, figsize=(12, 6 * columns_number))
+def plot_boxplot(df: pd.DataFrame, ID_variable: str):
+    if ID_variable not in df.columns:
+        raise ValueError("ID_variable not sent.")
+    columns_number = len(df.columns) - 1
+    fig, axs = plt.subplots(columns_number, figsize=(10, 6 * columns_number))
     plt.subplots_adjust(right=0.75)
-    for i, column in enumerate([value for value in df.columns if value != "ID"]):
+    for i, column in enumerate([value for value in df.columns if value != ID_variable]):
         if columns_number == 1:
             ax = axs
         else:
             ax = axs[i]
-        value_count = df[column].value_counts()
-        ax.pie(value_count, labels=value_count.index, colors=distinctipy.get_colors(len(value_count)),
-               autopct='%1.1f%%', startangle=90)
-        ax.set_title(f"{column}", pad=20)
-        ax.axis("equal")
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-        ax.grid(True)
+        sns.boxplot(data=df, x=ID_variable, y=column, ax=ax, label=column)
+        ax.grid(axis="x")
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.75))
+    fig.tight_layout(pad=7.0)
     return get_plot_file(fig)
 
 
-def plot_boxplot(df: pd.DataFrame):
-    columns_number = len(df.columns) if "ID" not in df.columns else len(df.columns) - 1
-    fig, axs = plt.subplots(columns_number, figsize=(8, 5 * columns_number))
-    for i, column in enumerate([value for value in df.columns if value != "ID"]):
-        if columns_number == 1:
-            ax = axs
-        else:
-            ax = axs[i]
-        ax.boxplot(df[column], vert=0)
-        ax.set_title(f"{column}", pad=20)
-        ax.grid(axis="x")
-    fig.tight_layout(pad=7.0)
+def plot_2Y_axis(df: pd.DataFrame, ID_variable: str):
+    if ID_variable not in df.columns:
+        raise ValueError("ID_variable not sent.")
+    fig, ax1 = plt.subplots(figsize=(14, 11))
+    plt.subplots_adjust(right=0.75)
+    column1, column2 = [value for value in df.columns if value != ID_variable][:2]
+    color1, color2 = distinctipy.get_colors(2)
+    sns.lineplot(data=df, x=ID_variable, y=column1, ax=ax1, color=color1, label=column1)
+    ax2 = ax1.twinx()
+    sns.lineplot(data=df, x=ID_variable, y=column2, ax=ax2, color=color2, label=column2)
+    fig.tight_layout(pad=15.0)
+    ax1.legend(loc='center left', bbox_to_anchor=(1, 0.75))
+    ax2.legend(loc='center left', bbox_to_anchor=(1, 0.70))
+
     return get_plot_file(fig)
 
 
