@@ -47,6 +47,7 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
                 <option value="hist">Histogram</option>
                 <option value="bar">Bar chart</option>
                 <option value="pie_chart">Pie chart</option>
+                <option value="heatmap">Heatmap</option>
             </select>
             <p><input style={{margin: 5}} type="button" className="bu-button bu-is-light bu-is-normal" value="Show" onClick={(e) => {
             const data = new URLSearchParams();
