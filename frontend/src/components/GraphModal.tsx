@@ -71,7 +71,7 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
             variables[variableIds[0]].values.forEach((_, i) => {
                 if (!idsToRemove.includes(i)) 
                 {
-                    console.log(i+1)
+                   // console.log(i+1)
                     data.append('ID[]', String(i+1))
                 }
             })
