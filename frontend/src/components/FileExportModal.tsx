@@ -80,7 +80,7 @@ export function FileExportModal({isFileExportModalOpen, setFileExportModalOpen, 
                     return;
                 }
 
-            var fileContent = "ID;Timestamp;";
+            var fileContent = "ID"  + selectedSeparator + "Timestamp" + selectedSeparator;
             for (let i = 0; i < _variables.length - 1; i++)
                 fileContent += _variables[i].name + selectedSeparator
             fileContent += _variables[_variables.length - 1].name + "\n"
