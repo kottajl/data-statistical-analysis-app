@@ -11,6 +11,7 @@ import { FileExportModal } from "./components/FileExportModal";
 import { RenameModal } from "./components/RenameModal";
 import { GraphModal } from "./components/GraphModal";
 import { MissingValuesModal } from "./components/MissingValuesModal";
+import { ResultModal } from "./components/ResultModal";
 import './bu-bulma.css';
 import './App.css';
 
@@ -33,6 +34,9 @@ function App() {
   var [missingVariableIds, setMissingVariableIds] = React.useState<number[]>([]);
   var [isGraphModalOpen, setGraphModalOpen] = React.useState<boolean>(false);
   var [graphVariableIds, setGraphVariableIds] = React.useState<number[]>([]);
+  var [isResultModalOpen, setResultModalOpen] = React.useState<boolean>(false);
+  var [result, setResult] = React.useState<any>("");
+  var [resultDescription, setResultDescription] = React.useState<string>("");
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps) =>
   {
@@ -69,6 +73,9 @@ function App() {
                 setMissingVariableIds={setMissingVariableIds}
                 setGraphModalOpen = {setGraphModalOpen}
                 setGraphVariableIds = {setGraphVariableIds}
+                setResultModalOpen = {setResultModalOpen}
+                setResult = {setResult}
+                setResultDescription = {setResultDescription}
                 />
     <CalculateStatisticsModals variables={variables} 
                               selectedColIds={selectedColIds}
@@ -99,6 +106,11 @@ function App() {
                 serverAddress = {serverAddress}
                 variableIds={graphVariableIds}
                 variables={variables}
+    />
+    <ResultModal isResultModalOpen = {isResultModalOpen}
+                setResultModalOpen = {setResultModalOpen}
+                result = {result}
+                resultDescription = {resultDescription}
     />
     <Notifications/>
   </div>

@@ -13,8 +13,16 @@ interface MissingValuesModalProps {
 }
 
 export function MissingValuesModal({isMissingValuesModalOpen, setMissingValuesModalOpen, variables, variableIds, updateSpreadsheet, serverAddress} : MissingValuesModalProps) {
-    const [selectedStrategy, setSelectedStrategy] = React.useState("mean");
+    const [selectedStrategy, setSelectedStrategy] = React.useState("before_nan");
     const [selectedConstant, setSelectedConstant] = React.useState(0);
+    const [onlyNumericalVariables, setOnlyNumericalVariables] = React.useState(true);
+
+    React.useEffect(() => {
+      const _variables = variables.filter((v, idx) => variableIds.includes(idx));
+      const hasCategorical = _variables.some(v => v.type === VariableType.CATEGORICAL);
+      setOnlyNumericalVariables(!hasCategorical);
+  }, [variables, variableIds]);
+
     return  <PureModal
             header="Fill missing values"
             footer=""
@@ -29,8 +37,8 @@ export function MissingValuesModal({isMissingValuesModalOpen, setMissingValuesMo
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-start'}}>
                 Strategy
                 <select value = {selectedStrategy} onChange={e => setSelectedStrategy(e.target.value)}>
-                    <option value="mean">Mean</option>
-                    <option value="median">Median</option>
+                    <option value="mean" style = {{display: onlyNumericalVariables ? "block": "none"}}>Mean</option>
+                    <option value="median" style = {{display: onlyNumericalVariables ? "block": "none"}}>Median</option>
                     <option value="before_nan">Value before</option>
                     <option value="after_nan">Value after</option>
                     <option value="constant">Constant</option>
@@ -45,7 +53,7 @@ export function MissingValuesModal({isMissingValuesModalOpen, setMissingValuesMo
                     const promises: any[] = new Array(_variables.length);
                     _variables.forEach((v, idx) => {
                       const data = new URLSearchParams();
-                      v.values.forEach(v2 => data.append('data[]', String(v2 === undefined ? null : v2)));
+                      v.values.forEach(v2 => data.append('data[]', String(v2 === undefined || v2 === "" ? null : v2)));
                       data.append('method', selectedStrategy);
                       
                       if (selectedStrategy === "constant") {
