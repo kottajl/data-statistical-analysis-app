@@ -19,7 +19,7 @@ export function ResultModal({isResultModalOpen, setResultModalOpen, result, resu
                 setResultModalOpen(false);
                 return true;
             }}
-            width="500px"
+            width="35%"
         >
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-start'}}>
                 <div>{resultDescription}</div>

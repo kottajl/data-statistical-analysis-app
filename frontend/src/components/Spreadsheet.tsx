@@ -81,6 +81,8 @@ interface SpreadsheetProps {
     setResultModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setResult: React.Dispatch<React.SetStateAction<any>>;
     setResultDescription: React.Dispatch<React.SetStateAction<string>>;
+    setCorrelationModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setCorrelationVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
 }
 
 
@@ -108,7 +110,9 @@ export function Spreadsheet({
     setGraphVariableIds,
     setResultModalOpen,
     setResult,
-    setResultDescription
+    setResultDescription,
+    setCorrelationModalOpen,
+    setCorrelationVariableIds
 }: SpreadsheetProps) {
     const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
         var colNames: string[] = columnIds.map((col) => (col as string))
@@ -220,6 +224,19 @@ export function Spreadsheet({
               setMissingValuesModalOpen(true);
             }
           });
+
+          if (selectedColIds.length === 2)
+            menuOptions.push({
+              id: "correlationCoefficient",
+              label: "Calculate correlation coefficient",
+              handler: () => {
+                const variableIds: number[] = [];
+                variables.forEach((v, idx) => {if (selectedColIds.includes(getColNameFromVarName(v.name))) variableIds.push(idx)});
+                setCorrelationVariableIds(variableIds);
+                setCorrelationModalOpen(true);
+              }
+            });
+          
 
           // NUMERICAL VARIABLES ONLY
           if (variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)) && v.type === VariableType.CATEGORICAL).length === 0)

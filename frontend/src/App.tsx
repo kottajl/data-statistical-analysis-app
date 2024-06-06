@@ -14,6 +14,7 @@ import { MissingValuesModal } from "./components/MissingValuesModal";
 import { ResultModal } from "./components/ResultModal";
 import './bu-bulma.css';
 import './App.css';
+import { CorrelationModal } from "./components/CorrelationModal";
 
 export const serverAddress = "http://127.0.0.1:8000";
 
@@ -37,6 +38,8 @@ function App() {
   var [isResultModalOpen, setResultModalOpen] = React.useState<boolean>(false);
   var [result, setResult] = React.useState<any>("");
   var [resultDescription, setResultDescription] = React.useState<string>("");
+  var [isCorrelationModalOpen, setCorrelationModalOpen] = React.useState<boolean>(false);
+  var [correlationVariableIds, setCorrelationVariableIds] = React.useState<number[]>([]);
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps) =>
   {
@@ -76,6 +79,8 @@ function App() {
                 setResultModalOpen = {setResultModalOpen}
                 setResult = {setResult}
                 setResultDescription = {setResultDescription}
+                setCorrelationModalOpen={setCorrelationModalOpen}
+                setCorrelationVariableIds={setCorrelationVariableIds}
                 />
     <CalculateStatisticsModals variables={variables} 
                               selectedColIds={selectedColIds}
@@ -111,6 +116,15 @@ function App() {
                 setResultModalOpen = {setResultModalOpen}
                 result = {result}
                 resultDescription = {resultDescription}
+    />
+    <CorrelationModal isCorrelationModalOpen = {isCorrelationModalOpen}
+                setCorrelationModalOpen = {setCorrelationModalOpen}
+                variableIds = {correlationVariableIds}
+                setResultModalOpen={setResultModalOpen}
+                setResult={setResult}
+                setResultDescription={setResultDescription}
+                variables={variables}
+                serverAddress={serverAddress}
     />
     <Notifications/>
   </div>
