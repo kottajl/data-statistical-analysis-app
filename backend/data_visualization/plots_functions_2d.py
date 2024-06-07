@@ -7,6 +7,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import distinctipy
 import seaborn as sns
+from statsmodels.graphics.mosaicplot import mosaic
 
 
 def draw_plot_2d(df: pd.DataFrame, plot_type: str, ID_variable: str = None):
@@ -23,6 +24,12 @@ def draw_plot_2d(df: pd.DataFrame, plot_type: str, ID_variable: str = None):
             return plot_boxplot(df, ID_variable)
         case "2Y_axis":
             return plot_2Y_axis(df, ID_variable)
+        case "stacked_bar":
+            return plot_stacked_bar(df, ID_variable)
+        case "mosaic":
+            return plot_mosaic(df, ID_variable)
+        case "categorical_heatmap":
+            return plot_categorical_heatmap(df, ID_variable)
         case _:
             raise ValueError(f"Unrecognized plot type: {plot_type}")
 
@@ -125,6 +132,68 @@ def plot_2Y_axis(df: pd.DataFrame, ID_variable: str):
 
     return get_plot_file(fig)
 
+def plot_stacked_bar(df: pd.DataFrame, ID_variable: str):
+    if ID_variable not in df.columns:
+        raise ValueError("ID_variable not sent.")
+    columns_number = len(df.columns) - 1
+    fig, axs = plt.subplots(columns_number, figsize=(10, 6 * columns_number))
+    plt.subplots_adjust(right=0.75)
+    for i, column in enumerate([value for value in df.columns if value != ID_variable]):
+        if columns_number == 1:
+            ax = axs
+        else:
+            ax = axs[i]
+
+        tmp_df = df[[ID_variable, column]].groupby(ID_variable).value_counts().unstack()
+        tmp_df[ID_variable] = tmp_df.index
+        tmp_df.plot(x=ID_variable, kind='bar', stacked=True, ax=ax)
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.75), title=column)
+        ax.set_xlabel(ID_variable)
+        ax.grid(axis="y")
+        ax.set_title(f'{ID_variable} vs {column}')
+    fig.tight_layout(pad=7.0)
+    return get_plot_file(fig)
+
+def plot_mosaic(df: pd.DataFrame, ID_variable: str):
+    if ID_variable not in df.columns:
+        raise ValueError("ID_variable not sent.")
+    columns_number = len(df.columns) - 1
+    fig, axs = plt.subplots(columns_number, figsize=(10, 6 * columns_number))
+    plt.subplots_adjust(right=0.75)
+    for i, column in enumerate([value for value in df.columns if value != ID_variable]):
+        if columns_number == 1:
+            ax = axs
+        else:
+            ax = axs[i]
+
+        mosaic(data=df, index=[ID_variable, column], ax=ax, title=f'{ID_variable} vs {column}')
+        ax.set_xlabel(column)
+        ax.set_ylabel(ID_variable)
+
+    fig.tight_layout(pad=7.0)
+    return get_plot_file(fig)
+
+def plot_categorical_heatmap(df: pd.DataFrame, ID_variable: str):
+    if ID_variable not in df.columns:
+        raise ValueError("ID_variable not sent.")
+    columns_number = len(df.columns) - 1
+    fig, axs = plt.subplots(columns_number, figsize=(10, 6 * columns_number))
+    plt.subplots_adjust(right=0.75)
+    for i, column in enumerate([value for value in df.columns if value != ID_variable]):
+        if columns_number == 1:
+            ax = axs
+        else:
+            ax = axs[i]
+
+        tmp_df = df[[ID_variable, column]].groupby(ID_variable).value_counts().unstack()
+        sns.heatmap(tmp_df, cmap="YlGnBu", annot=True, ax=ax)
+
+        ax.set_title(f'{ID_variable} vs {column}')
+        ax.set_xlabel(column)
+        ax.set_ylabel(ID_variable)
+    fig.tight_layout(pad=7.0)
+
+    return get_plot_file(fig)
 
 def get_plot_file(plot):
     buffer = io.BytesIO()

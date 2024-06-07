@@ -11,8 +11,10 @@ import { FileExportModal } from "./components/FileExportModal";
 import { RenameModal } from "./components/RenameModal";
 import { GraphModal } from "./components/GraphModal";
 import { MissingValuesModal } from "./components/MissingValuesModal";
+import { ResultModal } from "./components/ResultModal";
 import './bu-bulma.css';
 import './App.css';
+import { CorrelationModal } from "./components/CorrelationModal";
 
 export const serverAddress = "http://127.0.0.1:8000";
 
@@ -33,6 +35,11 @@ function App() {
   var [missingVariableIds, setMissingVariableIds] = React.useState<number[]>([]);
   var [isGraphModalOpen, setGraphModalOpen] = React.useState<boolean>(false);
   var [graphVariableIds, setGraphVariableIds] = React.useState<number[]>([]);
+  var [isResultModalOpen, setResultModalOpen] = React.useState<boolean>(false);
+  var [result, setResult] = React.useState<any>("");
+  var [resultDescription, setResultDescription] = React.useState<string>("");
+  var [isCorrelationModalOpen, setCorrelationModalOpen] = React.useState<boolean>(false);
+  var [correlationVariableIds, setCorrelationVariableIds] = React.useState<number[]>([]);
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps) =>
   {
@@ -69,6 +76,11 @@ function App() {
                 setMissingVariableIds={setMissingVariableIds}
                 setGraphModalOpen = {setGraphModalOpen}
                 setGraphVariableIds = {setGraphVariableIds}
+                setResultModalOpen = {setResultModalOpen}
+                setResult = {setResult}
+                setResultDescription = {setResultDescription}
+                setCorrelationModalOpen={setCorrelationModalOpen}
+                setCorrelationVariableIds={setCorrelationVariableIds}
                 />
     <CalculateStatisticsModals variables={variables} 
                               selectedColIds={selectedColIds}
@@ -99,6 +111,20 @@ function App() {
                 serverAddress = {serverAddress}
                 variableIds={graphVariableIds}
                 variables={variables}
+    />
+    <ResultModal isResultModalOpen = {isResultModalOpen}
+                setResultModalOpen = {setResultModalOpen}
+                result = {result}
+                resultDescription = {resultDescription}
+    />
+    <CorrelationModal isCorrelationModalOpen = {isCorrelationModalOpen}
+                setCorrelationModalOpen = {setCorrelationModalOpen}
+                variableIds = {correlationVariableIds}
+                setResultModalOpen={setResultModalOpen}
+                setResult={setResult}
+                setResultDescription={setResultDescription}
+                variables={variables}
+                serverAddress={serverAddress}
     />
     <Notifications/>
   </div>

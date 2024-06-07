@@ -78,6 +78,11 @@ interface SpreadsheetProps {
     setMissingVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
     setGraphModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setGraphVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
+    setResultModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setResult: React.Dispatch<React.SetStateAction<any>>;
+    setResultDescription: React.Dispatch<React.SetStateAction<string>>;
+    setCorrelationModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setCorrelationVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
 }
 
 
@@ -102,7 +107,12 @@ export function Spreadsheet({
     setMissingValuesModalOpen,
     setMissingVariableIds,
     setGraphModalOpen,
-    setGraphVariableIds
+    setGraphVariableIds,
+    setResultModalOpen,
+    setResult,
+    setResultDescription,
+    setCorrelationModalOpen,
+    setCorrelationVariableIds
 }: SpreadsheetProps) {
     const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
         var colNames: string[] = columnIds.map((col) => (col as string))
@@ -204,20 +214,33 @@ export function Spreadsheet({
             }
           });
     
-          // NUMERICAL VARIABLES ONLY
-          if (variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)) && v.type === VariableType.CATEGORICAL).length === 0)
-          {
-    
+          menuOptions.push({
+            id: "fillMissingValues",
+            label: "Fill missing values",
+            handler: () => {
+              const variableIds: number[] = [];
+              variables.forEach((v, idx) => {if (selectedColIds.includes(getColNameFromVarName(v.name))) variableIds.push(idx)});
+              setMissingVariableIds(variableIds);
+              setMissingValuesModalOpen(true);
+            }
+          });
+
+          if (selectedColIds.length === 2)
             menuOptions.push({
-              id: "fillMissingValues",
-              label: "Fill missing values",
+              id: "correlationCoefficient",
+              label: "Calculate correlation coefficient",
               handler: () => {
                 const variableIds: number[] = [];
                 variables.forEach((v, idx) => {if (selectedColIds.includes(getColNameFromVarName(v.name))) variableIds.push(idx)});
-                setMissingVariableIds(variableIds);
-                setMissingValuesModalOpen(true);
+                setCorrelationVariableIds(variableIds);
+                setCorrelationModalOpen(true);
               }
             });
+          
+
+          // NUMERICAL VARIABLES ONLY
+          if (variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)) && v.type === VariableType.CATEGORICAL).length === 0)
+          {
     
             menuOptions.push({
               id: "removeOutliers",
@@ -263,8 +286,102 @@ export function Spreadsheet({
                     showWarning(`An error occurred while processing the data: ${error.message}`);
                   });
               }
-            }
-          );
+            });
+
+            menuOptions.push({
+              id: "normalTest",
+              label: "Distribution normality test",
+              handler: () => {
+                const _variables = variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)));
+                const results: any[] = new Array(_variables.length);
+                const promises: any[] = new Array(_variables.length);
+              
+                _variables.forEach((v, idx) => {
+                  const data = new URLSearchParams();
+                  v.values.forEach(v2 => {if (v2 !== undefined) data.append('data[]', String(v2))});
+                  const requestOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: data.toString()
+                  };
+              
+                  promises[idx] = fetch(serverAddress + "/api/normal_test/", requestOptions)
+                    .then(response => {
+                      if (!response.ok) {
+                        throw new Error(`Server responded with status ${response.status}`);
+                      }
+                      return response.json();
+                    })
+                    .then(response => {
+                      results[idx] = { var: v, data: response };
+                    })
+                    .catch(error => {
+                      showWarning(`Error processing variable ${v.name}: ${error.message}`);
+                      results[idx] = { var: v, data: undefined }; // Fallback to undefined
+                    });
+                });
+              
+                Promise.all(promises)
+                  .then(() => {
+                    var res: string[] = [];
+                    results.forEach(r => {
+                      res.push(r.var.name + " " + r.data["data"].toFixed(2))
+                    });
+                    setResultDescription("Normality test value (closer to 0 = more normal):");
+                    setResult(res);
+                    setResultModalOpen(true);
+                  })
+                  .catch(error => {
+                    showWarning(`An error occurred while processing the data: ${error.message}`);
+                  });
+              }
+            });
+            
+            if (selectedColIds.length === 2)
+              menuOptions.push({
+                id: "calcStatSignificance",
+                label: "Calculate statistical significance",
+                handler: () => {
+                  const _variables = variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)));
+  
+                  const data = new URLSearchParams();
+                  const idsToRemove: number[] = []
+                  _variables[0].values.forEach((v, idx) => {if (v === undefined) idsToRemove.push(idx)})
+                  _variables[1].values.forEach((v, idx) => {if (v === undefined) idsToRemove.push(idx)})
+
+                  var _values: any = []
+                  _variables[0].values.forEach((v, i) => {if (!idsToRemove.includes(i)) _values.push(v)})
+                  data.append('data[]', _values.toString().substring(0, _values.toString().length - 1));
+                  
+                  _values = []
+                  _variables[1].values.forEach((v, i) => {if (!idsToRemove.includes(i)) _values.push(v)})
+                  data.append('data[]', _values.toString().substring(0, _values.toString().length - 1));
+  
+                  const requestOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: data.toString()
+                  };
+  
+                  fetch(serverAddress + "/api/statistical_significance_test/", requestOptions)
+                      .then(response => {
+                        if (!response.ok) {
+                          throw new Error(`Server responded with status ${response.status}`);
+                        }
+                        return response.json();
+                      })
+                      .then(response => {
+                        console.log(response)
+                        setResultDescription("T-test value (lower = more significant)")
+                        setResult([response["data"].toFixed(2)])
+                        setResultModalOpen(true);
+                      })
+                      .catch(error => {
+                        showWarning(`Error with calculation`);
+                      });
+  
+                }
+              });
           }
         }
         return menuOptions;

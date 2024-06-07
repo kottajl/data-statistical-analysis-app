@@ -64,8 +64,8 @@ export function TopMenu({setCsvOutput, setFileImportModalOpen, setFileExportModa
     event.target.value = ''
   }
 
-  return <div className="bu-box" style={{padding: 3, marginBottom: 5}}>
-    <Menu menuButton={<MenuButton className="bu-button bu-is-light bu-is-normal">File</MenuButton>} menuClassName="fileMenu">
+  return <div  style={{ padding: 0, marginBottom: 7, background: 'none', border: 'none', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+    <Menu menuButton={<MenuButton className="bu-button bu-is-light bu-is-normal" style={{width : 100 , marginRight : 7}}>File</MenuButton>} menuClassName="fileMenu">
         <MenuItem onClick={handleImportClick}>Import</MenuItem>
         <MenuItem onClick={e => {setFileExportModalOpen(true)}}>Export</MenuItem>
     </Menu>
@@ -77,5 +77,8 @@ export function TopMenu({setCsvOutput, setFileImportModalOpen, setFileExportModa
         onChange={handleFileChange}
         onClick={onInputClick}
     />
+    <button className="bu-button bu-is-light bu-is-normal" 
+      onClick={() => showWarning("Not implemented yet.")}
+      style={{width : 100}}>Help</button>
     </div>
 }

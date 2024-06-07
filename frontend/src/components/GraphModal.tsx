@@ -60,7 +60,7 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
                 //variables[i].values.forEach(v => data.append('data[]', String(v)));
                 var _values: any = []
                 variables[i].values.forEach((v, i) => {if (!idsToRemove.includes(i)) _values.push(v)})
-                data.append('data[]', _values.toString().substring(0, variables[i].values.toString().length - 1));
+                data.append('data[]', _values.toString().substring(0, _values.toString().length - 1));
                 //data.append('data[]', '0')
                 data.append('data_types[]', variables[i].type === VariableType.NUMERICAL ? "numerical" : "categorical");
                 data.append('variable_names[]', variables[i].name);
@@ -71,7 +71,7 @@ export function GraphModal({isGraphModalOpen, setGraphModalOpen, serverAddress, 
             variables[variableIds[0]].values.forEach((_, i) => {
                 if (!idsToRemove.includes(i)) 
                 {
-                    console.log(i+1)
+                   // console.log(i+1)
                     data.append('ID[]', String(i+1))
                 }
             })
