@@ -28,7 +28,7 @@ numerical_stats_2d = [
 ]
 
 categorical_stats_2d = [
-    "chisquare"
+    "chi2_contingency"
 ]
 
 numerical_categorical_stats_2d = [

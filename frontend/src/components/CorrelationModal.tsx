@@ -55,7 +55,7 @@ export function CorrelationModal({isCorrelationModalOpen, setCorrelationModalOpe
         <select value = {selectedType} onChange={e => setSelectedType(e.target.value)}>
             <option style = {{display: varTypes === "nn" ? "block": "none"}} value="pearsonr">Pearson</option>
             <option style = {{display: varTypes === "nn" ? "block": "none"}} value="spearmanr">Spearman</option>
-            <option style = {{display: varTypes === "cc" ? "block": "none"}} value="chisquare">Chi-square</option>
+            <option style = {{display: varTypes === "cc" ? "block": "none"}} value="chi2_contingency">Chi-square</option>
             <option style = {{display: varTypes === "nc" ? "block": "none"}} value="f_oneway">One-way ANOVA</option>
         </select>
         <p><input style={{margin: 5}} type="button" className="bu-button bu-is-light bu-is-normal" value="Calculate" onClick={(e) => {
@@ -113,7 +113,7 @@ export function CorrelationModal({isCorrelationModalOpen, setCorrelationModalOpe
                 })
                 .then((response) => { 
                     console.log(response);
-                    setResult([response[selectedType].toFixed(2)]);
+                    setResult([response[selectedType].statistic.toFixed(2)]);
                 })
                 .catch((error) => {
                     showWarning(`Error calculating`);

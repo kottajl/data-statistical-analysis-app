@@ -29,8 +29,8 @@ def get_stats(functions: list[str], all_data, data_types: list[str]):
     elif data_types.count("categorical") == 2:
         for function in functions:
             if function in categorical_functions_2d:
-                values1, values2 = get_value_count(data1, data2)
-                statistic, p_value = categorical_functions_2d[function](values1, values2)
+                values = np.array(get_value_count(data1, data2))
+                statistic, p_value, _, _ = categorical_functions_2d[function](values)
                 results[function] = dict(statistic=statistic, p_value=p_value)
             else:
                 results[function] = f"{function} is not supported"
