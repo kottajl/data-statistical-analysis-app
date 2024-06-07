@@ -96,18 +96,20 @@ def check_normal_test(request):
 def check_statistical_significance_test(request):
     if request.method == "POST":
         try:
-            if "data[]" in request.data:
-                string_data = request.data.getlist("data[]")
+            if "data[]" in request.data and "data_types[]" in request.data:
+                string_data, data_types = request.data.getlist("data[]"), request.data.getlist("data_types[]")
                 for i in range(len(string_data)):
                     string_data[i] = string_data[i].split(",")
-                if len(string_data) != 2:
+                if len(string_data) != 2 or len(data_types) != 2:
                     raise Exception("Invalid data")
-                data1, data2 = [[convert_data(value) for value in data] for data in string_data]
+                all_data = [[convert_data(value) for value in data_series] if type == "numerical" else data_series
+                                for type, data_series in zip(data_types, string_data)]
 
-                return Response(data=dict(data=statistical_significance_test(data1, data2)), status=status.HTTP_200_OK)
+                return Response(data=dict(data=statistical_significance_test(all_data, data_types)), status=status.HTTP_200_OK)
             raise Exception("Invalid data")
         except Exception as e:
             return Response(data=dict(detail=str(e)), status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(["POST"])
