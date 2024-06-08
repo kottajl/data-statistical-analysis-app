@@ -76,13 +76,14 @@ interface SpreadsheetProps {
     serverAddress: string;
     setMissingValuesModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setMissingVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
-    setGraphModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    setGraphVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
+    setPlotModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setPlotVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
     setResultModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setResult: React.Dispatch<React.SetStateAction<any>>;
     setResultDescription: React.Dispatch<React.SetStateAction<string>>;
     setCorrelationModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setCorrelationVariableIds: React.Dispatch<React.SetStateAction<number[]>>;
+    setMainPlotType: React.Dispatch<React.SetStateAction<string>>;
 }
 
 
@@ -106,13 +107,14 @@ export function Spreadsheet({
     serverAddress,
     setMissingValuesModalOpen,
     setMissingVariableIds,
-    setGraphModalOpen,
-    setGraphVariableIds,
+    setPlotModalOpen,
+    setPlotVariableIds,
     setResultModalOpen,
     setResult,
     setResultDescription,
     setCorrelationModalOpen,
-    setCorrelationVariableIds
+    setCorrelationVariableIds,
+    setMainPlotType
 }: SpreadsheetProps) {
     const handleColumnsReorder = (targetColumnId: Id, columnIds: Id[]) => {
         var colNames: string[] = columnIds.map((col) => (col as string))
@@ -203,16 +205,32 @@ export function Spreadsheet({
             }
           });
 
-          menuOptions.push({
-            id: "showPlot",
-            label: "Show plot",
-            handler: () => {
-              const variableIds: number[] = [];
-              variables.forEach((v, idx) => {if (selectedColIds.includes(getColNameFromVarName(v.name))) variableIds.push(idx)});
-              setGraphVariableIds(variableIds);
-              setGraphModalOpen(true);      
-            }
-          });
+          if (variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)) && v.type === VariableType.CATEGORICAL).length === 0 ||
+            variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)) && v.type === VariableType.NUMERICAL).length === 0)
+              menuOptions.push({
+                id: "show1dPlot",
+                label: "Show 1D plot",
+                handler: () => {
+                  const variableIds: number[] = [];
+                  variables.forEach((v, idx) => {if (selectedColIds.includes(getColNameFromVarName(v.name))) variableIds.push(idx)});
+                  setPlotVariableIds(variableIds);
+                  setMainPlotType("1d");
+                  setPlotModalOpen(true);      
+                }
+              });
+
+          if (selectedColIds.length === 2 || (selectedColIds.length === 3 && variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)) && v.type === VariableType.NUMERICAL).length === 2))
+            menuOptions.push({
+              id: "show2dPlot",
+              label: "Show 2D plot",
+              handler: () => {
+                const variableIds: number[] = [];
+                variables.forEach((v, idx) => {if (selectedColIds.includes(getColNameFromVarName(v.name))) variableIds.push(idx)});
+                setPlotVariableIds(variableIds);
+                setMainPlotType("2d");
+                setPlotModalOpen(true);      
+              }
+            });
     
           menuOptions.push({
             id: "fillMissingValues",
@@ -226,6 +244,7 @@ export function Spreadsheet({
           });
 
           if (selectedColIds.length === 2)
+          {
             menuOptions.push({
               id: "correlationCoefficient",
               label: "Calculate correlation coefficient",
@@ -236,6 +255,62 @@ export function Spreadsheet({
                 setCorrelationModalOpen(true);
               }
             });
+          }
+
+            if (selectedColIds.length === 2)
+              menuOptions.push({
+                id: "calcStatSignificance",
+                label: "Calculate statistical significance",
+                handler: () => {
+                  const _variables = variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)));
+  
+                  const data = new URLSearchParams();
+                  const idsToRemove: number[] = []
+                  _variables[0].values.forEach((v, idx) => {if (v === undefined) idsToRemove.push(idx)})
+                  _variables[1].values.forEach((v, idx) => {if (v === undefined) idsToRemove.push(idx)})
+
+                  if (_variables[0].type === VariableType.CATEGORICAL)
+                    data.append('data_types[]', "categorical");
+                  else
+                    data.append('data_types[]', "numerical");
+
+                  if (_variables[1].type === VariableType.CATEGORICAL)
+                    data.append('data_types[]', "categorical");
+                  else
+                    data.append('data_types[]', "numerical");
+
+                  var _values: any = []
+                  _variables[0].values.forEach((v, i) => {if (!idsToRemove.includes(i)) _values.push(v)})
+                  data.append('data[]', _values.toString().substring(0, _values.toString().length - 1));
+                  
+                  _values = []
+                  _variables[1].values.forEach((v, i) => {if (!idsToRemove.includes(i)) _values.push(v)})
+                  data.append('data[]', _values.toString().substring(0, _values.toString().length - 1));
+  
+                  const requestOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: data.toString()
+                  };
+  
+                  fetch(serverAddress + "/api/statistical_significance_test/", requestOptions)
+                      .then(response => {
+                        if (!response.ok) {
+                          throw new Error(`Server responded with status ${response.status}`);
+                        }
+                        return response.json();
+                      })
+                      .then(response => {
+                        setResultDescription("Calculated statistical significance")
+                        setResult(["stat = " + response.data["statistic"].toFixed(2), "p-val = " + response.data["p_value"].toFixed(2)])
+                        setResultModalOpen(true);
+                      })
+                      .catch(error => {
+                        showWarning(`Error with calculation`);
+                      });
+  
+                }
+              });
           
 
           // NUMERICAL VARIABLES ONLY
@@ -323,11 +398,12 @@ export function Spreadsheet({
               
                 Promise.all(promises)
                   .then(() => {
+                    console.log(results)
                     var res: string[] = [];
                     results.forEach(r => {
-                      res.push(r.var.name + " " + r.data["data"].toFixed(2))
+                      res.push(r.var.name + ": stat=" + r.data["data"]["statistic"].toFixed(2) + ", p-val=" + r.data["data"]["p_value"].toFixed(2))
                     });
-                    setResultDescription("Normality test value (closer to 0 = more normal):");
+                    setResultDescription("Normality test value:");
                     setResult(res);
                     setResultModalOpen(true);
                   })
@@ -337,51 +413,7 @@ export function Spreadsheet({
               }
             });
             
-            if (selectedColIds.length === 2)
-              menuOptions.push({
-                id: "calcStatSignificance",
-                label: "Calculate statistical significance",
-                handler: () => {
-                  const _variables = variables.filter(v => selectedColIds.includes(getColNameFromVarName(v.name)));
-  
-                  const data = new URLSearchParams();
-                  const idsToRemove: number[] = []
-                  _variables[0].values.forEach((v, idx) => {if (v === undefined) idsToRemove.push(idx)})
-                  _variables[1].values.forEach((v, idx) => {if (v === undefined) idsToRemove.push(idx)})
-
-                  var _values: any = []
-                  _variables[0].values.forEach((v, i) => {if (!idsToRemove.includes(i)) _values.push(v)})
-                  data.append('data[]', _values.toString().substring(0, _values.toString().length - 1));
-                  
-                  _values = []
-                  _variables[1].values.forEach((v, i) => {if (!idsToRemove.includes(i)) _values.push(v)})
-                  data.append('data[]', _values.toString().substring(0, _values.toString().length - 1));
-  
-                  const requestOptions = {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: data.toString()
-                  };
-  
-                  fetch(serverAddress + "/api/statistical_significance_test/", requestOptions)
-                      .then(response => {
-                        if (!response.ok) {
-                          throw new Error(`Server responded with status ${response.status}`);
-                        }
-                        return response.json();
-                      })
-                      .then(response => {
-                        console.log(response)
-                        setResultDescription("T-test value (lower = more significant)")
-                        setResult([response["data"].toFixed(2)])
-                        setResultModalOpen(true);
-                      })
-                      .catch(error => {
-                        showWarning(`Error with calculation`);
-                      });
-  
-                }
-              });
+            
           }
         }
         return menuOptions;

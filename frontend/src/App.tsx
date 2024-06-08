@@ -9,7 +9,7 @@ import { Id } from "@silevis/reactgrid";
 import { FileImportModal } from "./components/FileImportModal";
 import { FileExportModal } from "./components/FileExportModal";
 import { RenameModal } from "./components/RenameModal";
-import { GraphModal } from "./components/GraphModal";
+import { PlotModal } from "./components/PlotModal";
 import { MissingValuesModal } from "./components/MissingValuesModal";
 import { ResultModal } from "./components/ResultModal";
 import './bu-bulma.css';
@@ -33,13 +33,14 @@ function App() {
   var [variableToRenameId, setVariableToRenameId] = React.useState<number>(-1);
   var [isMissingValuesModalOpen, setMissingValuesModalOpen] = React.useState<boolean>(false);
   var [missingVariableIds, setMissingVariableIds] = React.useState<number[]>([]);
-  var [isGraphModalOpen, setGraphModalOpen] = React.useState<boolean>(false);
-  var [graphVariableIds, setGraphVariableIds] = React.useState<number[]>([]);
+  var [isPlotModalOpen, setPlotModalOpen] = React.useState<boolean>(false);
+  var [PlotVariableIds, setPlotVariableIds] = React.useState<number[]>([]);
   var [isResultModalOpen, setResultModalOpen] = React.useState<boolean>(false);
   var [result, setResult] = React.useState<any>("");
   var [resultDescription, setResultDescription] = React.useState<string>("");
   var [isCorrelationModalOpen, setCorrelationModalOpen] = React.useState<boolean>(false);
   var [correlationVariableIds, setCorrelationVariableIds] = React.useState<number[]>([]);
+  var [mainPlotType, setMainPlotType] = React.useState<string>("");
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps) =>
   {
@@ -74,13 +75,14 @@ function App() {
                 serverAddress={serverAddress}
                 setMissingValuesModalOpen={setMissingValuesModalOpen}
                 setMissingVariableIds={setMissingVariableIds}
-                setGraphModalOpen = {setGraphModalOpen}
-                setGraphVariableIds = {setGraphVariableIds}
+                setPlotModalOpen = {setPlotModalOpen}
+                setPlotVariableIds = {setPlotVariableIds}
                 setResultModalOpen = {setResultModalOpen}
                 setResult = {setResult}
                 setResultDescription = {setResultDescription}
                 setCorrelationModalOpen={setCorrelationModalOpen}
                 setCorrelationVariableIds={setCorrelationVariableIds}
+                setMainPlotType={setMainPlotType}
                 />
     <CalculateStatisticsModals variables={variables} 
                               selectedColIds={selectedColIds}
@@ -106,11 +108,12 @@ function App() {
                         updateSpreadsheet={updateSpreadsheet}
                         serverAddress={serverAddress}
     />
-    <GraphModal isGraphModalOpen = {isGraphModalOpen}
-                setGraphModalOpen = {setGraphModalOpen}
+    <PlotModal isPlotModalOpen = {isPlotModalOpen}
+                setPlotModalOpen = {setPlotModalOpen}
                 serverAddress = {serverAddress}
-                variableIds={graphVariableIds}
+                variableIds={PlotVariableIds}
                 variables={variables}
+                mainPlotType={mainPlotType}
     />
     <ResultModal isResultModalOpen = {isResultModalOpen}
                 setResultModalOpen = {setResultModalOpen}

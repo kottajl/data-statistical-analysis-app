@@ -29,7 +29,7 @@ export function CorrelationModal({isCorrelationModalOpen, setCorrelationModalOpe
     }
     else if (_variables[0].type === VariableType.CATEGORICAL && _variables[1].type === VariableType.CATEGORICAL)
     {
-        setSelectedType("chisquare");
+        setSelectedType("chi2_contingency");
         setVarTypes("cc");
     }
     else
