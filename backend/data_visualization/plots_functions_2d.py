@@ -166,7 +166,8 @@ def plot_mosaic(df: pd.DataFrame, ID_variable: str):
         else:
             ax = axs[i]
 
-        mosaic(data=df, index=[ID_variable, column], ax=ax, title=f'{ID_variable} vs {column}')
+        tmp_df = df[df[column] != '']
+        mosaic(data=tmp_df, index=[ID_variable, column], ax=ax, title=f'{ID_variable} vs {column}')
         ax.set_xlabel(column)
         ax.set_ylabel(ID_variable)
 
