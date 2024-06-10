@@ -27,7 +27,7 @@ export const getColumns = (variables: Variable[]): Column[] => [
 },
 ...variables.map<Column>((variable, idx) => ({
     columnId: getColNameFromVarName(variable.name),
-    width: getColNameFromVarName(variable.name).length * 10, 
+    width: (variable.name.length + 6) * 10, 
     resizable: true,
     reorderable: true
 })),
@@ -131,7 +131,7 @@ export function Spreadsheet({
         setColumns((prevColumns) => {
             const columnIndex = prevColumns.findIndex(el => el.columnId === ci);
             const resizedColumn = prevColumns[columnIndex];
-            const updatedColumn = { ...resizedColumn, width };
+            const updatedColumn = { ...resizedColumn, width  };
             prevColumns[columnIndex] = updatedColumn;
             return [...prevColumns];
         });
@@ -452,17 +452,18 @@ export function Spreadsheet({
         }); 
       }; 
 
-  return variables.length !== 0 ? <div className="bu-box" style={{backgroundColor: "white", width: "auto", display: "inline-block", padding: 3, marginBottom: 5}}>
-      <ReactGrid
-      rows={rows} 
-      columns={columns} 
-      onColumnResized={handleColumnResize} 
-      onColumnsReordered={handleColumnsReorder} 
-      onCellsChanged={handleChanges}
-      onContextMenu={handleContextMenu}
-      enableColumnSelection 
-      stickyTopRows={1} 
-      stickyLeftColumns={1}
-      />
+  return variables.length !== 0 ? 
+      <div  style={{backgroundColor: "white", maxWidth: "100%", maxHeight : "90vh", display: "inline-block", padding: 3, marginBottom: 5, overflowX : "auto", overflowY : "auto"}}>
+        <ReactGrid 
+        rows={rows} 
+        columns={columns} 
+        onColumnResized={handleColumnResize} 
+        onColumnsReordered={handleColumnsReorder} 
+        onCellsChanged={handleChanges}
+        onContextMenu={handleContextMenu}
+        enableColumnSelection 
+        stickyTopRows={1} 
+        stickyLeftColumns={1}
+        />
     </div> : <div></div>
 }

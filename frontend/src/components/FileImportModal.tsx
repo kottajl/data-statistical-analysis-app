@@ -24,10 +24,10 @@ export function FileImportModal({isFileImportModalOpen, setFileImportModalOpen, 
     const [rangeTo, setRangeTo] = useState('');
     return <div>
         <PureModal
-            header="CSV Import"
+            header="CSV import"
             footer=""
             isOpen={isFileImportModalOpen}
-            closeButton="X"
+            closeButton="✕"
             closeButtonPosition="header"
             onClose={() => {
                 setFileImportModalOpen(false);
@@ -35,8 +35,8 @@ export function FileImportModal({isFileImportModalOpen, setFileImportModalOpen, 
             }}
         >
         <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-start'}}>
-        Separator
-        <select value = {selectedSeparator} onChange={e => setSelectedSeparator(e.target.value)}>
+        Data separator
+        <select value = {selectedSeparator} onChange={e => setSelectedSeparator(e.target.value)} style={{marginBottom : 7}}>
             <option value=";">;</option>
             <option value=",">,</option>
             <option value=".">.</option>
@@ -45,13 +45,13 @@ export function FileImportModal({isFileImportModalOpen, setFileImportModalOpen, 
         </select>
         <br></br>
         Decimal separator
-        <select value = {selectedDecimalSeparator} onChange={e => setSelectedDecimalSeparator(e.target.value)}>
+        <select value = {selectedDecimalSeparator} onChange={e => setSelectedDecimalSeparator(e.target.value)} style={{marginBottom : 25}}>
             <option value=",">,</option>
             <option value=".">.</option>
         </select>
         <br></br>
         <input 
-  style={{margin: 5}} 
+  style={{marginBottom : 12}}
   type="button" 
   value="Next" 
   className="bu-button bu-is-light bu-is-normal" 
@@ -135,10 +135,10 @@ export function FileImportModal({isFileImportModalOpen, setFileImportModalOpen, 
         </div>
         </PureModal>
         <PureModal
-            header="CSV Import"
+            header="CSV import"
             footer=""
             isOpen={isFileImportModalOpen2}
-            closeButton="X"
+            closeButton="✕"
             closeButtonPosition="header"
             onClose={() => {
                 setFileImportModalOpen2(false);

@@ -1,6 +1,6 @@
 export enum VariableType {
-    CATEGORICAL = "C",
-    NUMERICAL = "N"
+    CATEGORICAL = "CAT",
+    NUMERICAL = "NUM"
 }
 
 export class Variable {

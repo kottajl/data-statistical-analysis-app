@@ -21,10 +21,10 @@ export function FileExportModal({isFileExportModalOpen, setFileExportModalOpen, 
     const [rangeVariablesFrom, setRangeVariablesFrom] = useState('');
     const [rangeVariablesTo, setRangeVariablesTo] = useState('');
     return  <PureModal
-            header="CSV Export"
+            header="CSV export"
             footer=""
             isOpen={isFileExportModalOpen}
-            closeButton="X"
+            closeButton="✕"
             closeButtonPosition="header"
             width="auto"
             onClose={() => {
@@ -34,7 +34,7 @@ export function FileExportModal({isFileExportModalOpen, setFileExportModalOpen, 
         >
             <div style={{display: 'flex', flexDirection: 'row'}}>
         <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', margin : 10, width : "20%"}}>
-        Separator
+        Data separator
         <select value = {selectedSeparator} onChange={e => setSelectedSeparator(e.target.value)} style={{marginBottom : 10, height : "2.5em"}}>
             <option value=";">;</option>
             <option value=",">,</option>

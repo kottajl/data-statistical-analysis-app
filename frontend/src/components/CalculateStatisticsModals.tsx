@@ -34,7 +34,7 @@ export function CalculateStatisticsModals({variables, selectedColIds, isStatModa
   header="Calculate statistics"
   footer=""
   isOpen={isStatModalOpen}
-  closeButton="X"
+  closeButton="✕"
   closeButtonPosition="header"
   onClose={() => {
     setStatModalOpen(false);
@@ -55,7 +55,7 @@ export function CalculateStatisticsModals({variables, selectedColIds, isStatModa
       <label style={{margin: 5}}><input type="checkbox" checked={selPercentile} onChange={() => setSelPercentile(!selPercentile)}/> Percentile</label>
       <label style={{margin: 5}}><input type="checkbox" checked={selMissing} onChange={() => setSelMissing(!selMissing)}/> Missing</label>
       <input
-  style={{ margin: 5 }}
+  style={{ marginTop: 7, marginBottom : 17 }}
   type="button"
   className="bu-button bu-is-light bu-is-normal"
   value="Calculate"
@@ -183,7 +183,7 @@ export function CalculateStatisticsModals({variables, selectedColIds, isStatModa
   footer=""
   width = "90%"
   isOpen={isResultModalOpen}
-  closeButton="X"
+  closeButton="✕"
   closeButtonPosition="header"
   onClose={() => {
     setResultModalOpen(false);

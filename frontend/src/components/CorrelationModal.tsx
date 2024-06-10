@@ -43,7 +43,7 @@ export function CorrelationModal({isCorrelationModalOpen, setCorrelationModalOpe
         header="Correlation coefficient"
         footer=""
         isOpen={isCorrelationModalOpen}
-        closeButton="X"
+        closeButton="✕"
         closeButtonPosition="header"
         onClose={() => {
             setCorrelationModalOpen(false);

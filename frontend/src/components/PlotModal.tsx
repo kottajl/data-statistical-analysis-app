@@ -85,7 +85,7 @@ export function PlotModal({isPlotModalOpen, setPlotModalOpen, serverAddress, var
             header="Plot"
             footer=""
             isOpen={isPlotModalOpen}
-            closeButton="X"
+            closeButton="✕"
             closeButtonPosition="header"
             onClose={() => {
                 setPlotModalOpen(false);
@@ -129,7 +129,7 @@ export function PlotModal({isPlotModalOpen, setPlotModalOpen, serverAddress, var
                 <option value={variables[variableIds[0]]? variables[variableIds[0]].name: ""}>{variables[variableIds[0]]? variables[variableIds[0]].name: ""}</option>
                 <option value={variables[variableIds[1]]? variables[variableIds[1]].name: ""}>{variables[variableIds[1]]? variables[variableIds[1]].name: ""}</option>
             </select>
-            <p><input style={{margin: 5}} type="button" className="bu-button bu-is-light bu-is-normal" value="Show" onClick={(e) => {
+            <p><input style={{marginTop: 10, marginBottom : 7}} type="button" className="bu-button bu-is-light bu-is-normal" value="Show" onClick={(e) => {
             
             const data = new URLSearchParams();
             const idsToRemove: number[] = []
@@ -190,7 +190,7 @@ export function PlotModal({isPlotModalOpen, setPlotModalOpen, serverAddress, var
         footer=""
         width="90%"
         isOpen={isPlotModalOpen2}
-        closeButton="X"
+        closeButton="✕"
         closeButtonPosition="header"
         onClose={() => {
             setImageSrc("");

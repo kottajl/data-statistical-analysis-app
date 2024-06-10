@@ -3,15 +3,18 @@ import { Menu, MenuItem, MenuButton } from '@szhsin/react-menu';
 import '@szhsin/react-menu/dist/index.css';
 import { Variable, VariableType } from "../classes/Variable"
 import { showWarning } from "../components/Notifications"
+import { useState } from 'react';
+
 
 interface TopMenuProps {
   setCsvOutput: React.Dispatch<React.SetStateAction<string>>;
   setFileImportModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setFileExportModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setHelpModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function TopMenu({setCsvOutput, setFileImportModalOpen, setFileExportModalOpen}: TopMenuProps) {
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
+export function TopMenu({setCsvOutput, setFileImportModalOpen, setFileExportModalOpen, setHelpModalOpen}: TopMenuProps) {
+    const fileInputRef = React.useRef<HTMLInputElement>(null); 
 
     const handleImportClick = () => {
       fileInputRef.current?.click();
@@ -64,10 +67,13 @@ export function TopMenu({setCsvOutput, setFileImportModalOpen, setFileExportModa
     event.target.value = ''
   }
 
-  return <div  style={{ padding: 0, marginBottom: 7, background: 'none', border: 'none', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
-    <Menu menuButton={<MenuButton className="bu-button bu-is-light bu-is-normal" style={{width : 100 , marginRight : 7}}>File</MenuButton>} menuClassName="fileMenu">
-        <MenuItem onClick={handleImportClick}>Import</MenuItem>
-        <MenuItem onClick={e => {setFileExportModalOpen(true)}}>Export</MenuItem>
+  return <div  style={{width : "100%", padding: 0, marginBottom: "0.7vh", height : "7vh", background: 'none', border: 'none', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+    <Menu 
+    menuStyle={{marginTop : 7, width : 207}}
+    menuButton={<MenuButton className="bu-button bu-is-light bu-is-normal" style={{width : 100 , marginRight : 7}}>File</MenuButton>} 
+      >
+        <MenuItem onClick={handleImportClick} style={{paddingLeft : 35}}>Import CSV</MenuItem>
+        <MenuItem onClick={e => {setFileExportModalOpen(true)}} style={{paddingLeft : 35}}>Export CSV</MenuItem>
     </Menu>
     <input
         type="file"
@@ -77,8 +83,13 @@ export function TopMenu({setCsvOutput, setFileImportModalOpen, setFileExportModa
         onChange={handleFileChange}
         onClick={onInputClick}
     />
-    <button className="bu-button bu-is-light bu-is-normal" 
-      onClick={() => showWarning("Not implemented yet.")}
-      style={{width : 100}}>Help</button>
+    <button
+        className="bu-button bu-is-light bu-is-normal"
+        onClick={() => setHelpModalOpen(true)}
+        style={{ width: 100 }}
+      >
+        Help
+      </button>
+
     </div>
 }

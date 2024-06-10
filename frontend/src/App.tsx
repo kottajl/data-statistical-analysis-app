@@ -15,6 +15,7 @@ import { ResultModal } from "./components/ResultModal";
 import './bu-bulma.css';
 import './App.css';
 import { CorrelationModal } from "./components/CorrelationModal";
+import { HelpModal } from "./components/HelpModal";
 
 export const serverAddress = "http://127.0.0.1:8000";
 
@@ -41,6 +42,7 @@ function App() {
   var [isCorrelationModalOpen, setCorrelationModalOpen] = React.useState<boolean>(false);
   var [correlationVariableIds, setCorrelationVariableIds] = React.useState<number[]>([]);
   var [mainPlotType, setMainPlotType] = React.useState<string>("");
+  var [isHelpModalOpen, setHelpModalOpen] = React.useState<boolean>(false);
 
   const updateSpreadsheet = (_variables: Variable[], _variableValuesLength: number=variableValuesLength, _timestamps: string[]=timestamps) =>
   {
@@ -51,10 +53,15 @@ function App() {
       setRows(getRows(_variables, _variableValuesLength, _timestamps));
   }
 
-  return <div style={{paddingRight: 10, paddingLeft: 10, paddingTop:5}}>
+  return <div style={{maxWidth : "100vw", maxHeight : "100vh", overflow : "none"}}>
+
+    <div style={{padding : 7, maxHeight : "90vh"}}>
+       
     <TopMenu setCsvOutput={setCsvOutput}
-              setFileImportModalOpen = {setFileImportModalOpen}
-              setFileExportModalOpen = {setFileExportModalOpen}/>
+      setFileImportModalOpen = {setFileImportModalOpen}
+      setFileExportModalOpen = {setFileExportModalOpen}
+      setHelpModalOpen = {setHelpModalOpen}
+    />
     <Spreadsheet
                 variables={variables}
                 setVariables={setVariables}
@@ -84,6 +91,8 @@ function App() {
                 setCorrelationVariableIds={setCorrelationVariableIds}
                 setMainPlotType={setMainPlotType}
                 />
+    </div>
+   
     <CalculateStatisticsModals variables={variables} 
                               selectedColIds={selectedColIds}
                               isStatModalOpen={isStatModalOpen}
@@ -128,6 +137,10 @@ function App() {
                 setResultDescription={setResultDescription}
                 variables={variables}
                 serverAddress={serverAddress}
+    />
+    <HelpModal 
+      isHelpModalOpen={isHelpModalOpen} 
+      setHelpModalOpen={setHelpModalOpen}
     />
     <Notifications/>
   </div>

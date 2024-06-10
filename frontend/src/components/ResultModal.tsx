@@ -13,7 +13,7 @@ export function ResultModal({isResultModalOpen, setResultModalOpen, result, resu
             header="Result"
             footer=""
             isOpen={isResultModalOpen}
-            closeButton="X"
+            closeButton="✕"
             closeButtonPosition="header"
             onClose={() => {
                 setResultModalOpen(false);
