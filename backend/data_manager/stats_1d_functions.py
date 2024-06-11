@@ -18,11 +18,11 @@ def get_numerical_stats(functions: list[str], all_data):
         if function == "mode":
             # return only one value
             results[function] = stats.mode(num_data).mode
-        elif function == "precentile":
+        elif function == "percentile":
             quartiles = np.percentile(num_data, [25, 50, 75])
-            results["quartile25"] = quartiles[0]
-            results["quartile50"] = quartiles[1]
-            results["quartile75"] = quartiles[2]
+            results["percentile25"] = quartiles[0]
+            results["percentile50"] = quartiles[1]
+            results["percentile75"] = quartiles[2]
         elif function == "missing":
             results[function] = np.isnan(all_data).sum()
         else:

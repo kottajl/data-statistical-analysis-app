@@ -20,8 +20,9 @@ export function HelpModal({isHelpModalOpen, setHelpModalOpen} : HelpModalProps)
             setHelpModalOpen(false);
             return true;
           }}
+          width="fit-content"
         >
-          <img src="help.png" alt="help" style={{ maxWidth: '100%', maxHeight: '100%' }} />
+          <img src="help.png" alt="help" style={{ width: '800', height: 'auto', WebkitUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'}} />
     
         </PureModal>
     </div>

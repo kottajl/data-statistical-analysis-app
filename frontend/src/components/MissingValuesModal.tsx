@@ -78,8 +78,6 @@ export function MissingValuesModal({isMissingValuesModalOpen, setMissingValuesMo
                         })
                         .catch(error => {
                           showWarning(`Error processing variable ${v.name}: ${error.message}`);
-                          // Fallback to undefined values if there's an error
-                          results[idx] = { var: v, data: { data: v.values.map(() => undefined) } };
                         });
                     });
                     

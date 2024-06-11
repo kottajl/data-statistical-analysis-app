@@ -77,7 +77,7 @@ export function CalculateStatisticsModals({variables, selectedColIds, isStatModa
     if (selIqr) f.push("iqr");
     if (selSkew) f.push("skew");
     if (selKurtosis) f.push("kurtosis");
-    if (selPercentile) f.push("precentile"); 
+    if (selPercentile) f.push("percentile"); 
     if (selMissing) f.push("missing");
 
     var numData: number = f.length;
@@ -113,17 +113,17 @@ export function CalculateStatisticsModals({variables, selectedColIds, isStatModa
           results[idx] = {
             var: v,
             data: { data: v.values.map(() => undefined) },
-          }; // Fallback to undefined
+          };
         });
     });
 
     try {
       await Promise.all(promises);
-      if (f.includes("precentile")) { 
-        f = f.filter((_f) => _f !== "precentile");
-        f.push("quartile25");
-        f.push("quartile50");
-        f.push("quartile75");
+      if (f.includes("percentile")) { 
+        f = f.filter((_f) => _f !== "percentile");
+        f.push("percentile25");
+        f.push("percentile50");
+        f.push("percentile75");
         numData += 2;
       }
       if (f.includes("unique")) {

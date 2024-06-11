@@ -346,7 +346,6 @@ export function Spreadsheet({
                     })
                     .catch(error => {
                       showWarning(`Error processing variable ${v.name}: ${error.message}`);
-                      results[idx] = { var: v, data: { data: v.values.map(() => undefined) } }; // Fallback to undefined
                     });
                 });
               
@@ -401,7 +400,8 @@ export function Spreadsheet({
                     console.log(results)
                     var res: string[] = [];
                     results.forEach(r => {
-                      res.push(r.var.name + ": stat=" + r.data["data"]["statistic"].toFixed(2) + ", p-val=" + r.data["data"]["p_value"].toFixed(2))
+                      res.push(r.var.name + ": stat=" + r.data["data"]["statistic"].toFixed(2));
+                      res.push(" p-val=" + r.data["data"]["p_value"].toFixed(2));
                     });
                     setResultDescription("Normality test value:");
                     setResult(res);
@@ -453,7 +453,7 @@ export function Spreadsheet({
       }; 
 
   return variables.length !== 0 ? 
-      <div  style={{backgroundColor: "white", maxWidth: "100%", maxHeight : "90vh", display: "inline-block", padding: 3, marginBottom: 5, overflowX : "auto", overflowY : "auto"}}>
+      <div  style={{backgroundColor: "white", maxWidth: "100%", maxHeight : "90vh", display: "inline-block", padding: 0, marginBottom: 5, overflowX : "auto", overflowY : "auto"}}>
         <ReactGrid 
         rows={rows} 
         columns={columns} 
