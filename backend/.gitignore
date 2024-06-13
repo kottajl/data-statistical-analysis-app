@@ -1,0 +1,7 @@
+# Python venv
+/venv
+
+# __pycache__
+/backend/__pycache__
+/data_manager/__pycache__
+/data_visualization/__pycache__
